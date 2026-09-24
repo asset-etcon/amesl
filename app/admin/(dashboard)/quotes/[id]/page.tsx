@@ -68,14 +68,14 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
               <div className="flex flex-wrap gap-2 pt-1">
                 <a
                   href={`mailto:${quote.customer_email}?subject=${encodeURIComponent(`Quote request — ${quote.product_name || "General enquiry"}`)}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#d7dee0] px-3 py-1.5 text-[12px] font-bold text-[#41515b] hover:border-[#0b1b29]"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-3 py-1.5 text-[12px] font-bold text-[#172633] hover:bg-[#f3bb4e]"
                 >
                   <Mail size={13} /> {quote.customer_email}
                 </a>
                 {quote.customer_phone && (
                   <a
                     href={`tel:${quote.customer_phone.replace(/[^+\d]/g, "")}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#d7dee0] px-3 py-1.5 text-[12px] font-bold text-[#41515b] hover:border-[#0b1b29]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-3 py-1.5 text-[12px] font-bold text-[#172633] hover:bg-[#f3bb4e]"
                   >
                     <Phone size={13} /> {quote.customer_phone}
                   </a>

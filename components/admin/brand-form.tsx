@@ -113,7 +113,7 @@ export function BrandForm({ brand }: { brand?: { id: string; name: string; slug:
               <div className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-[#e4e9ea] bg-[#f2f4f3]">
                 <Image src={logoUrl} alt="Brand logo" fill className="object-contain" unoptimized />
               </div>
-              <button type="button" onClick={() => setValue("logo_url", "")} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-bold text-[#b3261e] hover:bg-[#fdeceb]">
+              <button type="button" onClick={() => setValue("logo_url", "")} className="inline-flex items-center gap-1.5 rounded-lg bg-[#b3261e] px-3 py-2 text-[12px] font-bold text-white hover:bg-[#991b1b]">
                 <Trash2 size={14} /> Remove
               </button>
             </>
@@ -126,7 +126,7 @@ export function BrandForm({ brand }: { brand?: { id: string; name: string; slug:
       </FormSection>
 
       <div className="flex items-center justify-end gap-2">
-        <Link href="/admin/brands" className="inline-flex h-10 items-center rounded-lg px-4 text-[13.5px] font-bold text-[#41515b] hover:bg-[#f2f4f3]">
+        <Link href="/admin/brands" className="inline-flex h-10 items-center rounded-lg bg-[#e7a42b] px-4 text-[13.5px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
           Cancel
         </Link>
         <Button type="submit" busy={busy}>

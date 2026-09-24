@@ -27,7 +27,7 @@ export function Topbar({ email, role, fullName }: { email: string; role: Role; f
         <button
           type="button"
           onClick={signOut}
-          className="flex h-9 items-center gap-2 rounded-lg border border-[#d7dee0] bg-white px-3 text-[12.5px] font-bold text-[#41515b] transition-colors hover:border-[#b3261e] hover:text-[#b3261e]"
+          className="flex h-9 items-center gap-2 rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-3 text-[12.5px] font-bold text-[#172633] transition-colors hover:border-[#b3261e] hover:bg-[#b3261e] hover:text-white"
         >
           <LogOut size={14} /> Sign out
         </button>

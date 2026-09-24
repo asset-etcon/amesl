@@ -154,16 +154,16 @@ export function ProductTable({ rows, page, pageCount, total, canManage }: Props)
                 <td className="hidden px-4 py-3 text-[12.5px] text-[#65727a] sm:table-cell">{formatDate(row.updated_at)}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
-                    <Link href={`/products/${row.brand_slug ?? ""}/${row.slug}`} target="_blank" aria-label="View on site" title="View on site" className="rounded-lg p-2 text-[#8a969c] hover:bg-[#f2f4f3] hover:text-[#152431]">
+                    <Link href={`/products/${row.brand_slug ?? ""}/${row.slug}`} target="_blank" aria-label="View on site" title="View on site" className="rounded-lg bg-[#e7a42b] p-2 text-[#172633] hover:bg-[#f3bb4e]">
                       <Eye size={15} />
                     </Link>
-                    <button type="button" aria-label="Duplicate" title="Duplicate" onClick={() => run(duplicateProductAction(row.id), "Duplicate created.")} disabled={pending} className="rounded-lg p-2 text-[#8a969c] hover:bg-[#f2f4f3] hover:text-[#152431] disabled:opacity-40">
+                    <button type="button" aria-label="Duplicate" title="Duplicate" onClick={() => run(duplicateProductAction(row.id), "Duplicate created.")} disabled={pending} className="rounded-lg bg-[#e7a42b] p-2 text-[#172633] hover:bg-[#f3bb4e] disabled:opacity-40">
                       <Copy size={15} />
                     </button>
-                    <button type="button" aria-label="Delete" title="Delete" onClick={() => { setDeleteId(row.id); setDeleteMany(false); }} className="rounded-lg p-2 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e]">
+                    <button type="button" aria-label="Delete" title="Delete" onClick={() => { setDeleteId(row.id); setDeleteMany(false); }} className="rounded-lg bg-[#b3261e] p-2 text-white hover:bg-[#991b1b]">
                       <Trash2 size={15} />
                     </button>
-                    <Link href={`/admin/products/${row.id}`} aria-label="Edit" title="Edit" className="rounded-lg bg-[#f2f4f3] p-2 text-[#41515b] hover:bg-[#0b1b29] hover:text-white">
+                    <Link href={`/admin/products/${row.id}`} aria-label="Edit" title="Edit" className="rounded-lg bg-[#e7a42b] p-2 text-[#172633] hover:bg-[#f3bb4e]">
                       <Pencil size={15} />
                     </Link>
                   </div>

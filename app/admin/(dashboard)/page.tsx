@@ -64,7 +64,7 @@ export default async function DashboardPage() {
         title="Dashboard"
         description={`Welcome back${profile.full_name ? `, ${profile.full_name}` : ""}. Here is what is happening across your catalogue.`}
         actions={
-          <Link href="/admin/products/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b1b29] px-4 text-[13.5px] font-bold text-white hover:bg-[#1c4052]">
+          <Link href="/admin/products/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#e7a42b] px-4 text-[13.5px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
             <Plus size={16} /> New product
           </Link>
         }

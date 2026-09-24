@@ -43,9 +43,18 @@ function assertDatabaseUrl(): string {
   return DATABASE_URL;
 }
 
+// pg-connection-string v2 treats sslmode=require/prefer as verify-full and it
+// overrides any ssl object we pass, which breaks Aiven's self-signed certs.
+// Strip the param so our explicit SSL config below governs TLS.
+function connectionString(): string {
+  const u = new URL(assertDatabaseUrl());
+  u.searchParams.delete("sslmode");
+  return u.toString();
+}
+
 function createPool(): Pool {
   return new Pool({
-    connectionString: assertDatabaseUrl(),
+    connectionString: connectionString(),
     ssl: PG_SSL ? { rejectUnauthorized: false } : false,
     max: Number(process.env.PG_POOL_MAX) || 5,
     connectionTimeoutMillis: 10_000,

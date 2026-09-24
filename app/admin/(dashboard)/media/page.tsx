@@ -55,13 +55,13 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
       {pageCount > 1 && (
         <div className="mt-5 flex items-center justify-end gap-2">
           {page > 1 && (
-            <a href={`/admin/media?page=${page - 1}`} className="rounded-lg border border-[#d7dee0] bg-white px-3 py-1.5 text-[12.5px] font-bold text-[#41515b]">
+            <a href={`/admin/media?page=${page - 1}`} className="rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-3 py-1.5 text-[12.5px] font-bold text-[#172633]">
               Prev
             </a>
           )}
           <span className="text-[12.5px] text-[#65727a]">Page {page} of {pageCount}</span>
           {page < pageCount && (
-            <a href={`/admin/media?page=${page + 1}`} className="rounded-lg border border-[#d7dee0] bg-white px-3 py-1.5 text-[12.5px] font-bold text-[#41515b]">
+            <a href={`/admin/media?page=${page + 1}`} className="rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-3 py-1.5 text-[12.5px] font-bold text-[#172633]">
               Next
             </a>
           )}

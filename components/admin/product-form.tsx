@@ -188,7 +188,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
             description="Every product belongs to a brand. Create at least one brand (for example a technology partner of AMESL) before adding products."
             action={
               <Link href="/admin/brands/new">
-                <Button variant="accent">Create a brand first</Button>
+                <Button variant="accent" className="text-[12px]">Create a brand first</Button>
               </Link>
             }
           />
@@ -279,13 +279,13 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
                           </span>
                         )}
                         <div className="ml-auto flex items-center gap-0.5">
-                          <button type="button" onClick={() => setImages(moveItem(images, i, -1))} className="rounded p-1.5 text-[#8a969c] hover:bg-[#f2f4f3]" title="Move up">
+                          <button type="button" onClick={() => setImages(moveItem(images, i, -1))} className="rounded bg-[#e7a42b] p-1.5 text-[#172633] hover:bg-[#f3bb4e]" title="Move up">
                             <ArrowUp size={13} />
                           </button>
-                          <button type="button" onClick={() => setImages(moveItem(images, i, 1))} className="rounded p-1.5 text-[#8a969c] hover:bg-[#f2f4f3]" title="Move down">
+                          <button type="button" onClick={() => setImages(moveItem(images, i, 1))} className="rounded bg-[#e7a42b] p-1.5 text-[#172633] hover:bg-[#f3bb4e]" title="Move down">
                             <ArrowDown size={13} />
                           </button>
-                          <button type="button" onClick={() => setImages(images.filter((x) => x.key !== img.key))} className="rounded p-1.5 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e]" title="Remove">
+                          <button type="button" onClick={() => setImages(images.filter((x) => x.key !== img.key))} className="rounded bg-[#b3261e] p-1.5 text-white hover:bg-[#991b1b]" title="Remove">
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -296,7 +296,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
                           type="button"
                           onClick={() => setImages(images.map((x) => ({ ...x, isPrimary: x.key === img.key })))}
                           disabled={img.isPrimary}
-                          className="shrink-0 rounded-md border border-[#d7dee0] px-2 py-1 text-[11px] font-bold text-[#41515b] disabled:opacity-40"
+                          className="shrink-0 rounded-md border border-[#e7a42b] bg-[#e7a42b] px-2 py-1 text-[10px] font-bold text-[#172633] disabled:opacity-40"
                         >
                           Set primary
                         </button>
@@ -308,10 +308,10 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
             </div>
             <div className="mt-3 flex items-center gap-2">
               <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadImage(f); e.target.value = ""; }} />
-              <Button type="button" variant="outline" size="sm" onClick={() => imageInputRef.current?.click()} busy={imageBusy}>
+              <Button type="button" variant="outline" size="sm" className="text-[11px]" onClick={() => imageInputRef.current?.click()} busy={imageBusy}>
                 <ImagePlus size={14} /> Upload image
               </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setPickerOpen(true)}>
+              <Button type="button" variant="ghost" size="sm" className="text-[11px]" onClick={() => setPickerOpen(true)}>
                 Browse library
               </Button>
             </div>
@@ -328,7 +328,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
                     placeholder="Document name"
                     className="h-8 flex-1 text-[12px]"
                   />
-                  <button type="button" onClick={() => setDocs(docs.filter((x) => x.key !== doc.key))} className="rounded p-1.5 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e]" title="Remove document">
+                  <button type="button" onClick={() => setDocs(docs.filter((x) => x.key !== doc.key))} className="rounded bg-[#b3261e] p-1.5 text-white hover:bg-[#991b1b]" title="Remove document">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -336,7 +336,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
             </div>
             <div className="mt-3">
               <input ref={docInputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadDoc(f); e.target.value = ""; }} />
-              <Button type="button" variant="outline" size="sm" onClick={() => docInputRef.current?.click()} busy={docBusy}>
+              <Button type="button" variant="outline" size="sm" className="text-[11px]" onClick={() => docInputRef.current?.click()} busy={docBusy}>
                 <Upload size={14} /> Upload PDF
               </Button>
             </div>
@@ -347,10 +347,10 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
               {specs.map((spec, i) => (
                 <div key={spec.key} className="flex items-center gap-2">
                   <div className="flex flex-col">
-                    <button type="button" onClick={() => setSpecs(moveItem(specs, i, -1))} className="rounded p-0.5 text-[#8a969c] hover:bg-[#f2f4f3]" title="Move up">
+                    <button type="button" onClick={() => setSpecs(moveItem(specs, i, -1))} className="rounded bg-[#e7a42b] p-0.5 text-[#172633] hover:bg-[#f3bb4e]" title="Move up">
                       <ArrowUp size={12} />
                     </button>
-                    <button type="button" onClick={() => setSpecs(moveItem(specs, i, 1))} className="rounded p-0.5 text-[#8a969c] hover:bg-[#f2f4f3]" title="Move down">
+                    <button type="button" onClick={() => setSpecs(moveItem(specs, i, 1))} className="rounded bg-[#e7a42b] p-0.5 text-[#172633] hover:bg-[#f3bb4e]" title="Move down">
                       <ArrowDown size={12} />
                     </button>
                   </div>
@@ -366,13 +366,13 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
                     placeholder="Value"
                     className="h-9 flex-1 text-[12.5px]"
                   />
-                  <button type="button" onClick={() => setSpecs(specs.filter((x) => x.key !== spec.key))} className="rounded p-1.5 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e]" title="Remove specification">
+                  <button type="button" onClick={() => setSpecs(specs.filter((x) => x.key !== spec.key))} className="rounded bg-[#b3261e] p-1.5 text-white hover:bg-[#991b1b]" title="Remove specification">
                     <Trash2 size={13} />
                   </button>
                 </div>
               ))}
             </div>
-            <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => setSpecs([...specs, { key: uid(), name: "", value: "" }])}>
+            <Button type="button" variant="ghost" size="sm" className="mt-2 text-[11px]" onClick={() => setSpecs([...specs, { key: uid(), name: "", value: "" }])}>
               <Plus size={14} /> Add specification
             </Button>
           </FormSection>
@@ -380,13 +380,13 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
       </div>
 
       <div className="sticky bottom-0 -mx-6 flex flex-wrap items-center justify-end gap-2 border-t border-[#e4e9ea] bg-white/95 px-6 py-4 backdrop-blur lg:-mx-8 lg:px-8">
-        <Link href="/admin/products" className="inline-flex h-10 items-center rounded-lg px-4 text-[13.5px] font-bold text-[#41515b] hover:bg-[#f2f4f3]">
+        <Link href="/admin/products" className="inline-flex h-10 items-center rounded-lg bg-[#e7a42b] px-4 text-[12px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
           Cancel
         </Link>
-        <Button type="button" variant="outline" onClick={saveAndPublish} disabled={busy}>
+        <Button type="button" variant="outline" className="text-[12px]" onClick={saveAndPublish} disabled={busy}>
           Save & publish
         </Button>
-        <Button type="submit" busy={busy}>
+        <Button type="submit" className="text-[12px]" busy={busy}>
           {isEdit ? "Save changes" : "Create product"}
         </Button>
       </div>

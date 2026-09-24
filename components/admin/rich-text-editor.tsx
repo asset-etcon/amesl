@@ -11,9 +11,9 @@ import { Bold, Heading1, Heading2, Italic, Link as LinkIcon, List, ListOrdered, 
 import { cn } from "@/lib/utils";
 
 const toolbarButton =
-  "flex h-8 w-8 items-center justify-center rounded-md text-[#41515b] transition-colors hover:bg-[#eef1f0] disabled:opacity-40";
+  "flex h-8 w-8 items-center justify-center rounded-md bg-[#e7a42b] text-[#172633] transition-colors hover:bg-[#f3bb4e] disabled:opacity-40";
 const toolbarButtonActive = "bg-[#0b1b29] text-white hover:bg-[#0b1b29]";
-const toolbarLabel = "h-8 rounded-md px-2 text-[12px] font-bold text-[#41515b] hover:bg-[#eef1f0]";
+const toolbarLabel = "h-8 rounded-md bg-[#e7a42b] px-2 text-[12px] font-bold text-[#172633] hover:bg-[#f3bb4e]";
 
 export function RichTextEditor({ value, onChange, placeholder }: { value: string; onChange: (html: string) => void; placeholder?: string }) {
   const editor = useEditor({

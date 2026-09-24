@@ -127,7 +127,7 @@ export function HeroSlideForm({ slide }: { slide?: SlideRecord }) {
                 <Image src={desktopUrl} alt="Desktop hero" fill className="object-cover" />
               </div>
             ) : (
-              <button type="button" onClick={() => desktopRef.current?.click()} className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#cfd7d9] bg-[#f7f9f8] text-[#8a969c] transition-colors hover:border-[#0b1b29] hover:text-[#0b1b29]">
+              <button type="button" onClick={() => desktopRef.current?.click()} className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#e7a42b] bg-[#e7a42b] text-[#172633] transition-colors hover:border-[#f3bb4e] hover:bg-[#f3bb4e]">
                 <ImagePlus size={20} />
                 <span className="text-[12px] font-bold">Upload desktop image</span>
               </button>
@@ -142,7 +142,7 @@ export function HeroSlideForm({ slide }: { slide?: SlideRecord }) {
                 <Image src={mobileUrl} alt="Mobile hero" fill className="object-cover" />
               </div>
             ) : (
-              <button type="button" onClick={() => mobileRef.current?.click()} className="flex aspect-[9/16] max-h-[240px] w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#cfd7d9] bg-[#f7f9f8] text-[#8a969c] transition-colors hover:border-[#0b1b29] hover:text-[#0b1b29]">
+              <button type="button" onClick={() => mobileRef.current?.click()} className="flex aspect-[9/16] max-h-[240px] w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#e7a42b] bg-[#e7a42b] text-[#172633] transition-colors hover:border-[#f3bb4e] hover:bg-[#f3bb4e]">
                 <ImagePlus size={20} />
                 <span className="px-4 text-center text-[12px] font-bold">Upload mobile image</span>
               </button>
@@ -153,7 +153,7 @@ export function HeroSlideForm({ slide }: { slide?: SlideRecord }) {
       </FormSection>
 
       <div className="flex items-center justify-end gap-2">
-        <Link href="/admin/hero-slides" className="inline-flex h-10 items-center rounded-lg px-4 text-[13.5px] font-bold text-[#41515b] hover:bg-[#f2f4f3]">
+        <Link href="/admin/hero-slides" className="inline-flex h-10 items-center rounded-lg bg-[#e7a42b] px-4 text-[13.5px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
           Cancel
         </Link>
         <Button type="submit" busy={busy} disabled={uploading !== null}>

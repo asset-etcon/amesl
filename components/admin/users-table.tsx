@@ -100,7 +100,7 @@ export function UsersTable({ rows, currentUserId }: { rows: UserRow[]; currentUs
                       title={row.id === currentUserId ? "You cannot delete yourself" : "Delete user"}
                       disabled={row.id === currentUserId}
                       onClick={() => setDeleteTarget(row)}
-                      className="rounded-lg p-2 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e] disabled:opacity-30"
+                      className="rounded-lg bg-[#b3261e] p-2 text-white hover:bg-[#991b1b] disabled:opacity-30"
                     >
                       <Trash2 size={15} />
                     </button>

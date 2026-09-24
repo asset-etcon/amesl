@@ -86,7 +86,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
             href={key ? `/admin/quotes?status=${key}` : "/admin/quotes"}
             className={cn(
               "rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-colors",
-              status === key ? "bg-[#0b1b29] text-white" : "bg-white text-[#41515b] hover:bg-[#e9eeed]"
+              "bg-[#e7a42b] text-[#172633] hover:bg-[#f3bb4e]"
             )}
           >
             {label}
@@ -100,7 +100,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
         <div className="mt-4 flex items-center justify-between">
           <p className="text-[12.5px] text-[#65727a]">Page {page}</p>
           {page > 1 && (
-            <Link href={`/admin/quotes?${new URLSearchParams({ ...(status && { status }), page: String(page - 1) })}`} className="rounded-lg border border-[#d7dee0] bg-white px-2.5 py-1 text-[12.5px] font-bold text-[#41515b]">
+            <Link href={`/admin/quotes?${new URLSearchParams({ ...(status && { status }), page: String(page - 1) })}`} className="rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-2.5 py-1 text-[12.5px] font-bold text-[#172633]">
               Prev
             </Link>
           )}

@@ -48,8 +48,12 @@ const fullName = nameArg || "Super Admin";
 const id = crypto.randomUUID();
 const passwordHash = await bcrypt.hash(passwordArg, 10);
 
+// Drop sslmode so our explicit ssl config governs TLS (Aiven self-signed CA).
+const connection = new URL(url);
+connection.searchParams.delete("sslmode");
+
 const pool = new pg.Pool({
-  connectionString: url,
+  connectionString: connection.toString(),
   ssl: process.env.PG_SSL === "false" ? false : { rejectUnauthorized: false },
   max: 1,
   connectionTimeoutMillis: 10_000,

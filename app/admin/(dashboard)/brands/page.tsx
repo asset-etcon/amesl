@@ -41,7 +41,7 @@ export default async function BrandsPage() {
         description={`${rows.length} technology partners${rows.length === 1 ? "" : "s"} in the catalogue.`}
         actions={
           canManage ? (
-            <Link href="/admin/brands/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b1b29] px-4 text-[13.5px] font-bold text-white hover:bg-[#1c4052]">
+            <Link href="/admin/brands/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#e7a42b] px-4 text-[13.5px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
               <Plus size={16} /> New brand
             </Link>
           ) : undefined

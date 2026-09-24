@@ -87,10 +87,10 @@ export function MediaGrid({ rows }: { rows: MediaRow[] }) {
                   {row.width && row.height ? ` · ${row.width}×${row.height}` : ""}
                 </p>
                 <div className="mt-2 flex items-center justify-end gap-1">
-                  <button type="button" aria-label="Copy URL" title="Copy URL" onClick={() => void copy(row.url)} className="rounded-lg p-1.5 text-[#8a969c] hover:bg-[#f2f4f3]">
+                  <button type="button" aria-label="Copy URL" title="Copy URL" onClick={() => void copy(row.url)} className="rounded-lg bg-[#e7a42b] p-1.5 text-[#172633] hover:bg-[#f3bb4e]">
                     <Copy size={14} />
                   </button>
-                  <button type="button" aria-label="Delete" title="Delete" onClick={() => setDeleteId(row.id)} className="rounded-lg p-1.5 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e]">
+                  <button type="button" aria-label="Delete" title="Delete" onClick={() => setDeleteId(row.id)} className="rounded-lg bg-[#b3261e] p-1.5 text-white hover:bg-[#991b1b]">
                     <Trash2 size={14} />
                   </button>
                 </div>

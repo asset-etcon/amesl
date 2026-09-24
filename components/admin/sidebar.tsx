@@ -51,7 +51,7 @@ export function Sidebar({ role }: { role: Role }) {
       href={href}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors",
-        isActive(href) ? "bg-white/10 text-[#f1b945]" : "text-[#b9c6cd] hover:bg-white/5 hover:text-white"
+        isActive(href) ? "bg-white text-black" : "!text-white hover:bg-white/10 hover:text-white"
       )}
     >
       <Icon size={17} strokeWidth={2} />
@@ -62,7 +62,7 @@ export function Sidebar({ role }: { role: Role }) {
 
   const renderGroup = (title: string, items: NavItem[]) => (
     <div className="mt-5">
-      <p className="px-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#5c7a88]">{title}</p>
+      <p className="px-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#f1b945]">{title}</p>
       <div className="mt-1.5 space-y-0.5">{items.filter((i) => can(role, i.permission)).map(renderLink)}</div>
     </div>
   );

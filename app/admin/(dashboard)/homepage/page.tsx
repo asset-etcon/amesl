@@ -66,7 +66,7 @@ export default async function HomepagePage() {
         description="Control the hero banner and the products featured on the website homepage."
         actions={
           canManage ? (
-            <Link href="/admin/hero-slides/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b1b29] px-4 text-[13.5px] font-bold text-white hover:bg-[#1c4052]">
+            <Link href="/admin/hero-slides/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#e7a42b] px-4 text-[13.5px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
               <Images size={16} /> New hero slide
             </Link>
           ) : undefined

@@ -72,7 +72,7 @@ export function CategoryForm({ category }: { category?: { id: string; name: stri
       </FormSection>
 
       <div className="flex items-center justify-end gap-2">
-        <Link href="/admin/categories" className="inline-flex h-10 items-center rounded-lg px-4 text-[13.5px] font-bold text-[#41515b] hover:bg-[#f2f4f3]">
+        <Link href="/admin/categories" className="inline-flex h-10 items-center rounded-lg bg-[#e7a42b] px-4 text-[13.5px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
           Cancel
         </Link>
         <Button type="submit" busy={busy}>

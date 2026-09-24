@@ -104,13 +104,13 @@ export function FeaturedProducts({ rows, options }: { rows: FeaturedRow[]; optio
                 <p className="text-[11.5px] text-[#8a969c]">{row.brand_name}</p>
               </div>
               <div className="flex items-center gap-1">
-                <button type="button" aria-label="Move up" title="Move up" onClick={() => run(moveFeaturedProductAction(row.product_id, "up"), "Reordered.")} disabled={i === 0 || pending} className="rounded-lg p-2 text-[#8a969c] hover:bg-[#f2f4f3] disabled:opacity-30">
+                <button type="button" aria-label="Move up" title="Move up" onClick={() => run(moveFeaturedProductAction(row.product_id, "up"), "Reordered.")} disabled={i === 0 || pending} className="rounded-lg bg-[#e7a42b] p-2 text-[#172633] hover:bg-[#f3bb4e] disabled:opacity-30">
                   <ChevronUp size={15} />
                 </button>
-                <button type="button" aria-label="Move down" title="Move down" onClick={() => run(moveFeaturedProductAction(row.product_id, "down"), "Reordered.")} disabled={i === rows.length - 1 || pending} className="rounded-lg p-2 text-[#8a969c] hover:bg-[#f2f4f3] disabled:opacity-30">
+                <button type="button" aria-label="Move down" title="Move down" onClick={() => run(moveFeaturedProductAction(row.product_id, "down"), "Reordered.")} disabled={i === rows.length - 1 || pending} className="rounded-lg bg-[#e7a42b] p-2 text-[#172633] hover:bg-[#f3bb4e] disabled:opacity-30">
                   <ChevronDown size={15} />
                 </button>
-                <button type="button" aria-label="Remove" title="Remove from homepage" onClick={() => run(removeFeaturedProductAction(row.product_id), "Removed from homepage.")} className="rounded-lg p-2 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e]">
+                <button type="button" aria-label="Remove" title="Remove from homepage" onClick={() => run(removeFeaturedProductAction(row.product_id), "Removed from homepage.")} className="rounded-lg bg-[#b3261e] p-2 text-white hover:bg-[#991b1b]">
                   <X size={15} />
                 </button>
               </div>

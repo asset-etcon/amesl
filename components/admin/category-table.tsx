@@ -74,7 +74,7 @@ export function CategoryTable({ rows }: { rows: CategoryRow[] }) {
                     title={row.status === "active" ? "Set inactive" : "Set active"}
                     onClick={() => run(setCategoryStatusAction([row.id], row.status === "active" ? "inactive" : "active"), row.status === "active" ? "Category hidden." : "Category visible.")}
                     disabled={pending}
-                    className="rounded-lg p-1.5 text-[#8a969c] hover:bg-[#f2f4f3] disabled:opacity-40"
+                    className="rounded-lg bg-[#e7a42b] p-1.5 text-[#172633] hover:bg-[#f3bb4e] disabled:opacity-40"
                   >
                     <Star size={13} />
                   </button>
@@ -82,10 +82,10 @@ export function CategoryTable({ rows }: { rows: CategoryRow[] }) {
               </td>
               <td className="px-4 py-3">
                 <div className="flex items-center justify-end gap-1">
-                  <button type="button" aria-label="Delete" title="Delete" onClick={() => setDeleteId(row.id)} className="rounded-lg p-2 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e]">
+                  <button type="button" aria-label="Delete" title="Delete" onClick={() => setDeleteId(row.id)} className="rounded-lg bg-[#b3261e] p-2 text-white hover:bg-[#991b1b]">
                     <Trash2 size={15} />
                   </button>
-                  <Link href={`/admin/categories/${row.id}`} aria-label="Edit" title="Edit" className="rounded-lg bg-[#f2f4f3] p-2 text-[#41515b] hover:bg-[#0b1b29] hover:text-white">
+                  <Link href={`/admin/categories/${row.id}`} aria-label="Edit" title="Edit" className="rounded-lg bg-[#e7a42b] p-2 text-[#172633] hover:bg-[#f3bb4e]">
                     <Pencil size={15} />
                   </Link>
                 </div>

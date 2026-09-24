@@ -78,14 +78,14 @@ export function QuoteTable({ rows }: { rows: QuoteRow[] }) {
                     title={row.archived ? "Restore" : "Archive"}
                     onClick={() => run(toggleQuoteArchiveAction([row.id], !row.archived), row.archived ? "Restored." : "Archived.")}
                     disabled={pending}
-                    className="rounded-lg p-2 text-[#8a969c] hover:bg-[#f2f4f3] disabled:opacity-40"
+                    className="rounded-lg bg-[#e7a42b] p-2 text-[#172633] hover:bg-[#f3bb4e] disabled:opacity-40"
                   >
                     {row.archived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
                   </button>
-                  <button type="button" aria-label="Delete" title="Delete" onClick={() => setDeleteId(row.id)} className="rounded-lg p-2 text-[#8a969c] hover:bg-[#fdeceb] hover:text-[#b3261e]">
+                  <button type="button" aria-label="Delete" title="Delete" onClick={() => setDeleteId(row.id)} className="rounded-lg bg-[#b3261e] p-2 text-white hover:bg-[#991b1b]">
                     <Trash2 size={15} />
                   </button>
-                  <Link href={`/admin/quotes/${row.id}`} aria-label="Open" title="Open" className="rounded-lg bg-[#f2f4f3] p-2 text-[#41515b] hover:bg-[#0b1b29] hover:text-white">
+                  <Link href={`/admin/quotes/${row.id}`} aria-label="Open" title="Open" className="rounded-lg bg-[#e7a42b] p-2 text-[#172633] hover:bg-[#f3bb4e]">
                     <Pencil size={15} />
                   </Link>
                 </div>
