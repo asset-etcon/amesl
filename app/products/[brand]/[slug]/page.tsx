@@ -8,7 +8,7 @@ import { ProductCard, type CardProduct } from "@/components/public/product-card"
 import { QuoteButton } from "@/components/public/quote-button";
 import { ArrowUpRight, Download, FileText, ShieldCheck, Calculator } from "@/components/icons";
 import { db } from "@/lib/db";
-import { products, brands, productImages, productSpecifications, productDocuments } from "@/db/schema";
+import { products, brands, categories, productImages, productSpecifications, productDocuments } from "@/db/schema";
 import { eq, and, ne, inArray, asc, desc, isNull } from "drizzle-orm";
 
 interface Params {
@@ -60,9 +60,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<Pa
         short_description: products.short_description,
         brand_name: brands.name,
         brand_slug: brands.slug,
+        category_name: categories.name,
       })
       .from(products)
       .innerJoin(brands, eq(products.brand_id, brands.id))
+      .leftJoin(categories, eq(products.category_id, categories.id))
       .where(
         and(
           eq(products.status, "published"),
@@ -90,7 +92,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<Pa
     slug: r.slug,
     brandSlug: r.brand_slug ?? "",
     brandName: r.brand_name ?? "",
-    categoryName: null,
+    categoryName: r.category_name ?? null,
     shortDescription: r.short_description,
     imageUrl: relatedMap.get(r.id) ?? null,
   }));

@@ -27,7 +27,7 @@ export function ProductCard({ product }: { product: CardProduct }) {
         <h3 className="product-card-name">{product.name}</h3>
         {product.shortDescription && <p className="product-card-desc">{product.shortDescription}</p>}
         <div className="product-card-meta">
-          <span className="product-card-chip">{product.categoryName || "General equipment"}</span>
+          {product.categoryName && <span className="product-card-chip">{product.categoryName}</span>}
           <span className="product-card-arrow"><ArrowUpRight size={15} /></span>
         </div>
       </div>

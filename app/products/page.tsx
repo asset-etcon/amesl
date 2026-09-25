@@ -6,7 +6,7 @@ import { ProductCard, type CardProduct } from "@/components/public/product-card"
 import { BrandWall } from "@/components/public/brand-wall";
 import { CatalogueSearch } from "@/components/public/catalogue-search";
 import { db } from "@/lib/db";
-import { products, brands as brandsTable, productImages } from "@/db/schema";
+import { products, brands as brandsTable, categories, productImages } from "@/db/schema";
 import { eq, and, inArray, asc, desc, count, ilike } from "drizzle-orm";
 import { cn } from "@/lib/utils";
 
@@ -72,9 +72,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       created_at: products.created_at,
       brand_name: brandsTable.name,
       brand_slug: brandsTable.slug,
+      category_name: categories.name,
     })
     .from(products)
     .innerJoin(brandsTable, eq(products.brand_id, brandsTable.id))
+    .leftJoin(categories, eq(products.category_id, categories.id))
     .where(where)
     .orderBy(sort === "name" ? asc(products.name) : desc(products.created_at))
     .limit(PER_PAGE)
@@ -104,7 +106,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     slug: p.slug,
     brandSlug: p.brand_slug ?? "",
     brandName: p.brand_name ?? "",
-    categoryName: null,
+    categoryName: p.category_name ?? null,
     shortDescription: p.short_description,
     imageUrl: imageMap.get(p.id) ?? null,
   }));

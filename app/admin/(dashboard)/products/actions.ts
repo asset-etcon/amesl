@@ -120,7 +120,7 @@ async function syncChildren(productId: string, images: ImageInput[], specs: Spec
       .set({ url: row.url, alt: row.alt, is_primary: row.is_primary, display_order: row.display_order })
       .where(eq(productImages.id, row.id));
   }
-  if (imageInserts.length) await db.insert(productImages).values(imageInserts);
+  const insertedImages = imageInserts.length ? await db.insert(productImages).values(imageInserts).returning({ id: productImages.id }) : [];
 
   for (const row of specUpdates) {
     await db
@@ -128,7 +128,7 @@ async function syncChildren(productId: string, images: ImageInput[], specs: Spec
       .set({ name: row.name, value: row.value, display_order: row.display_order })
       .where(eq(productSpecifications.id, row.id));
   }
-  if (specInserts.length) await db.insert(productSpecifications).values(specInserts);
+  const insertedSpecs = specInserts.length ? await db.insert(productSpecifications).values(specInserts).returning({ id: productSpecifications.id }) : [];
 
   for (const row of docUpdates) {
     await db
@@ -136,20 +136,20 @@ async function syncChildren(productId: string, images: ImageInput[], specs: Spec
       .set({ name: row.name, url: row.url, file_type: row.file_type, display_order: row.display_order })
       .where(eq(productDocuments.id, row.id));
   }
-  if (docInserts.length) await db.insert(productDocuments).values(docInserts);
+  const insertedDocs = docInserts.length ? await db.insert(productDocuments).values(docInserts).returning({ id: productDocuments.id }) : [];
 
   const existingImages = await db.select({ id: productImages.id }).from(productImages).where(eq(productImages.product_id, productId));
-  const keptImageIds = new Set(imageUpdates.map((x) => x.id));
+  const keptImageIds = new Set([...imageUpdates.map((x) => x.id), ...insertedImages.map((x) => x.id)]);
   const removedImages = existingImages.map((r) => r.id).filter((id) => !keptImageIds.has(id));
   if (removedImages.length) await db.delete(productImages).where(inArray(productImages.id, removedImages));
 
   const existingSpecs = await db.select({ id: productSpecifications.id }).from(productSpecifications).where(eq(productSpecifications.product_id, productId));
-  const keptSpecIds = new Set(specUpdates.map((x) => x.id));
+  const keptSpecIds = new Set([...specUpdates.map((x) => x.id), ...insertedSpecs.map((x) => x.id)]);
   const removedSpecs = existingSpecs.map((r) => r.id).filter((id) => !keptSpecIds.has(id));
   if (removedSpecs.length) await db.delete(productSpecifications).where(inArray(productSpecifications.id, removedSpecs));
 
   const existingDocs = await db.select({ id: productDocuments.id }).from(productDocuments).where(eq(productDocuments.product_id, productId));
-  const keptDocIds = new Set(docUpdates.map((x) => x.id));
+  const keptDocIds = new Set([...docUpdates.map((x) => x.id), ...insertedDocs.map((x) => x.id)]);
   const removedDocs = existingDocs.map((r) => r.id).filter((id) => !keptDocIds.has(id));
   if (removedDocs.length) await db.delete(productDocuments).where(inArray(productDocuments.id, removedDocs));
 }
