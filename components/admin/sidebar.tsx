@@ -50,7 +50,7 @@ export function Sidebar({ role }: { role: Role }) {
       key={href}
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-colors",
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-semibold transition-colors",
         isActive(href) ? "bg-white text-black" : "!text-white hover:bg-white/10 hover:text-white"
       )}
     >

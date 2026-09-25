@@ -95,7 +95,7 @@ export function ProductFilters({ current, brands, categories }: Props) {
         <button
           type="button"
           onClick={() => apply({ q: undefined, status: undefined, brand: undefined, category: undefined, featured: undefined })}
-          className="h-10 rounded-lg bg-[#b3261e] px-3 text-[12.5px] font-bold text-white hover:bg-[#991b1b]"
+          className="h-10 rounded-lg bg-[#b3261e] px-3 text-[12px] font-bold text-white hover:bg-[#991b1b]"
         >
           Clear
         </button>

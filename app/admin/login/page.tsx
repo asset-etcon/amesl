@@ -72,7 +72,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={busy}
-            className="mt-6 flex h-11 w-full items-center justify-center rounded-lg bg-[#e7a42b] text-[13.5px] font-extrabold text-[#172633] transition-colors hover:bg-[#f3bb4e] disabled:opacity-60"
+            className="mt-6 flex h-11 w-full items-center justify-center rounded-lg bg-[#e7a42b] text-[12px] font-extrabold text-[#172633] transition-colors hover:bg-[#f3bb4e] disabled:opacity-60"
           >
             {busy ? "Signing in…" : "Sign in to dashboard"}
           </button>

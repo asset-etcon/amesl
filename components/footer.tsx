@@ -6,12 +6,12 @@ import { siteSettings } from "@/db/schema";
 
 const socials: ReadonlyArray<[string, string]> = [
   ["Home", "/"],
-  ["About", "/#about"],
-  ["Services", "/#services"],
+  ["About", "/about"],
+  ["Services", "/services"],
   ["Products", "/products"],
-  ["Solutions", "/#solutions"],
-  ["Training", "/#training"],
-  ["Contact", "/#contact"],
+  ["Solutions", "/solutions"],
+  ["Training", "https://training.assetmatrixenergy.com/"],
+  ["Contact", "/contact"],
 ];
 
 async function readSettings(): Promise<Record<string, string>> {

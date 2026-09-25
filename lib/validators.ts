@@ -6,7 +6,7 @@ export const productSchema = z.object({
   name: z.string().trim().min(2, "Product name is required").max(160),
   slug: z.string().trim().max(200).optional(),
   brand_id: z.string().min(1, "Please choose a brand"),
-  category_id: z.string().optional(),
+  category_id: z.string().nullable().optional(),
   short_description: z.string().trim().max(300).optional(),
   description: z.string().max(100_000).optional(),
   status: z.enum(["draft", "published", "archived"]),

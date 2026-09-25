@@ -16,7 +16,7 @@ export function Button({ variant = "primary", size = "md", busy, className, chil
     <button
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-lg font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60",
-        size === "sm" ? "h-8 px-3 text-[12px]" : "h-10 px-4 text-[13.5px]",
+        size === "sm" ? "h-8 px-3 text-[12px]" : "h-10 px-4 text-[12px]",
         variant === "primary" && "bg-[#e7a42b] text-[#172633] hover:bg-[#f3bb4e]",
         variant === "accent" && "bg-[#e7a42b] text-[#172633] hover:bg-[#f3bb4e]",
         variant === "outline" && "border border-[#e7a42b] bg-[#e7a42b] text-[#172633] hover:bg-[#f3bb4e]",
@@ -118,7 +118,7 @@ export function Switch({ checked, onChange, label }: { checked: boolean; onChang
       <span className={cn("relative h-6 w-11 rounded-full transition-colors", checked ? "bg-[#0b1b29]" : "bg-[#cdd6d9]")}>
         <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", checked ? "left-[22px]" : "left-0.5")} />
       </span>
-      {label && <span className="text-[13px] font-semibold text-[#41515b]">{label}</span>}
+      {label && <span className="text-[12px] font-semibold text-[#41515b]">{label}</span>}
     </button>
   );
 }
@@ -247,10 +247,10 @@ export function Pagination({ page, pageCount, total, onPage }: { page: number; p
         <span>
           Page {page} of {pageCount}
         </span>
-        <button type="button" disabled={page <= 1} onClick={() => onPage(page - 1)} className="rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-2.5 py-1 text-[#172633] disabled:opacity-40">
+        <button type="button" disabled={page <= 1} onClick={() => onPage(page - 1)} className="rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-2.5 py-1 text-[12px] text-[#172633] disabled:opacity-40">
           Prev
         </button>
-        <button type="button" disabled={page >= pageCount} onClick={() => onPage(page + 1)} className="rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-2.5 py-1 text-[#172633] disabled:opacity-40">
+        <button type="button" disabled={page >= pageCount} onClick={() => onPage(page + 1)} className="rounded-lg border border-[#e7a42b] bg-[#e7a42b] px-2.5 py-1 text-[12px] text-[#172633] disabled:opacity-40">
           Next
         </button>
       </div>

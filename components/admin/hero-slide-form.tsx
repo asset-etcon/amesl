@@ -153,7 +153,7 @@ export function HeroSlideForm({ slide }: { slide?: SlideRecord }) {
       </FormSection>
 
       <div className="flex items-center justify-end gap-2">
-        <Link href="/admin/hero-slides" className="inline-flex h-10 items-center rounded-lg bg-[#e7a42b] px-4 text-[13.5px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
+        <Link href="/admin/hero-slides" className="inline-flex h-10 items-center rounded-lg bg-[#e7a42b] px-4 text-[12px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
           Cancel
         </Link>
         <Button type="submit" busy={busy} disabled={uploading !== null}>

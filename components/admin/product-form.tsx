@@ -216,7 +216,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
                 </Select>
               </Field>
               <Field label="Category" error={errors.category_id?.message}>
-                <Select {...register("category_id")} value={watch("category_id")}>
+                <Select {...register("category_id")} value={watch("category_id") ?? ""}>
                   <option value="">No category</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -308,10 +308,10 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
             </div>
             <div className="mt-3 flex items-center gap-2">
               <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadImage(f); e.target.value = ""; }} />
-              <Button type="button" variant="outline" size="sm" className="text-[11px]" onClick={() => imageInputRef.current?.click()} busy={imageBusy}>
+              <Button type="button" variant="outline" size="sm" className="text-[12px]" onClick={() => imageInputRef.current?.click()} busy={imageBusy}>
                 <ImagePlus size={14} /> Upload image
               </Button>
-              <Button type="button" variant="ghost" size="sm" className="text-[11px]" onClick={() => setPickerOpen(true)}>
+              <Button type="button" variant="ghost" size="sm" className="text-[12px]" onClick={() => setPickerOpen(true)}>
                 Browse library
               </Button>
             </div>
@@ -336,7 +336,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
             </div>
             <div className="mt-3">
               <input ref={docInputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadDoc(f); e.target.value = ""; }} />
-              <Button type="button" variant="outline" size="sm" className="text-[11px]" onClick={() => docInputRef.current?.click()} busy={docBusy}>
+              <Button type="button" variant="outline" size="sm" className="text-[12px]" onClick={() => docInputRef.current?.click()} busy={docBusy}>
                 <Upload size={14} /> Upload PDF
               </Button>
             </div>
@@ -372,7 +372,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
                 </div>
               ))}
             </div>
-            <Button type="button" variant="ghost" size="sm" className="mt-2 text-[11px]" onClick={() => setSpecs([...specs, { key: uid(), name: "", value: "" }])}>
+            <Button type="button" variant="ghost" size="sm" className="mt-2 text-[12px]" onClick={() => setSpecs([...specs, { key: uid(), name: "", value: "" }])}>
               <Plus size={14} /> Add specification
             </Button>
           </FormSection>

@@ -11,11 +11,16 @@ export async function uploadFileToStorage(
   const prepared = await uploadAssetAction({ kind, fileName: file.name, contentType: file.type });
   if (!prepared.ok) return prepared;
 
-  const put = await fetch(prepared.uploadUrl, {
-    method: "PUT",
-    body: file,
-    headers: { "Content-Type": file.type },
-  });
+  let put: Response;
+  try {
+    put = await fetch(prepared.uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+  } catch {
+    return { ok: false, error: "Upload failed: could not reach the storage server. Check your network and try again." };
+  }
   if (!put.ok) return { ok: false, error: `Upload failed (${put.status}).` };
 
   return { ok: true, url: prepared.url };
