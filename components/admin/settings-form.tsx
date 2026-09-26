@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Field, FormSection, Input, Textarea, useToast } from "@/components/admin/ui";
-import { saveSettingsAction, SETTING_KEYS } from "@/app/admin/(dashboard)/settings/actions";
+import { saveSettingsAction } from "@/app/admin/(dashboard)/settings/actions";
+import { SETTING_KEYS } from "@/lib/settings";
 
 type Values = Record<string, string>;
 

@@ -9,7 +9,8 @@ import { brands as brandsTable, siteSettings } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 
 export const metadata: Metadata = {
-  title: "About Us | Asset Matrix Energy",
+  title: "About Us",
+  alternates: { canonical: "/about" },
   description: "Asset Matrix Energy Services Limited is a wholly indigenous Nigerian company providing specialized engineering, industrial reliability and technical solutions across Nigeria and Sub-Saharan Africa.",
 };
 

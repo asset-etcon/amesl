@@ -4,7 +4,8 @@ import { Footer } from "@/components/footer";
 import { ArrowUpRight, ArrowRight, Activity, Gauge, Zap, Waves, Thermometer, ScanLine, Move3D, Crosshair, Wrench, Settings2 } from "@/components/icons";
 
 export const metadata: Metadata = {
-  title: "Services | Asset Matrix Energy",
+  title: "Services",
+  alternates: { canonical: "/services" },
   description: "Condition monitoring, predictive maintenance, electrical testing and diagnostics, vibration analysis, thermography, laser alignment, calibration and more.",
 };
 

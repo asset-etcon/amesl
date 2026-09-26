@@ -9,6 +9,7 @@ const socials: ReadonlyArray<[string, string]> = [
   ["About", "/about"],
   ["Services", "/services"],
   ["Products", "/products"],
+  ["News", "/news"],
   ["Solutions", "/solutions"],
   ["Training", "https://training.assetmatrixenergy.com/"],
   ["Contact", "/contact"],

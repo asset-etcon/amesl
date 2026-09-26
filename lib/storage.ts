@@ -7,6 +7,7 @@ export const STORAGE_PREFIXES = {
   media: "media",
   brandLogos: "brands",
   heroImages: "hero",
+  newsImages: "news",
 } as const;
 
 export type StorageKind = keyof typeof STORAGE_PREFIXES;

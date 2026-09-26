@@ -5,7 +5,8 @@ import { Footer } from "@/components/footer";
 import { ArrowRight, Zap, Activity, Gauge, Settings2, Move3D, GraduationCap } from "@/components/icons";
 
 export const metadata: Metadata = {
-  title: "Solutions | Asset Matrix Energy",
+  title: "Solutions",
+  alternates: { canonical: "/solutions" },
   description: "Diagnostic technologies, engineering methods and process instrumentation to help operators make informed decisions about critical assets.",
 };
 

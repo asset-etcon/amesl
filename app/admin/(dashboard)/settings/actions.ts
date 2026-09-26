@@ -5,25 +5,18 @@ import { db } from "@/lib/db";
 import { siteSettings } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
-
-export const SETTING_KEYS = [
-  "company_name",
-  "company_short_name",
-  "footer_about",
-  "copyright_text",
-  "email",
-  "phone_primary",
-  "phone_secondary",
-  "address_head_office",
-  "address_operations",
-  "training_url",
-] as const;
+import { SETTING_KEYS, SETTING_VALUE_MAX_LENGTH } from "@/lib/settings";
 
 export async function saveSettingsAction(values: Record<string, string>): Promise<{ ok: boolean; error?: string }> {
   try {
     const auth = await requireRole("settings");
 
-    const rows = SETTING_KEYS.map((key) => ({ key, value: (values[key] ?? "").trim().slice(0, 500) }));
+    // Only the known keys are written, so an unexpected key in `values` can
+    // never create a row the admin UI does not know how to render.
+    const rows = SETTING_KEYS.map((key) => ({
+      key,
+      value: (values[key] ?? "").trim().slice(0, SETTING_VALUE_MAX_LENGTH),
+    }));
     for (const row of rows) {
       await db
         .insert(siteSettings)

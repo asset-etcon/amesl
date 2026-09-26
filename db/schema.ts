@@ -168,6 +168,49 @@ export const siteSettings = pgTable("site_settings", {
   updated_at: updatedAt(),
 }, (t) => [primaryKey({ columns: [t.key] })]);
 
+export const newsCategories = pgTable("news_categories", {
+  id: id(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description").notNull().default(""),
+  status: text("status").notNull().default("active"),
+  display_order: integer("display_order").notNull().default(0),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [
+  uniqueIndex("news_categories_slug_idx").on(t.slug),
+  index("news_categories_status_idx").on(t.status),
+]);
+
+export const newsPosts = pgTable("news_posts", {
+  id: id(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull(),
+  excerpt: text("excerpt").notNull().default(""),
+  body: text("body").notNull().default(""),
+  cover_image: text("cover_image").notNull().default(""),
+  cover_image_alt: text("cover_image_alt").notNull().default(""),
+  category_id: uuid("category_id"),
+  status: text("status").notNull().default("draft"),
+  featured: boolean("featured").notNull().default(false),
+  /** Null publishes as soon as status flips to published; a future value holds the post back. */
+  publish_at: timestamp("publish_at", { withTimezone: true, mode: "string" }),
+  seo_title: text("seo_title").notNull().default(""),
+  seo_description: text("seo_description").notNull().default(""),
+  created_by: uuid("created_by"),
+  updated_by: uuid("updated_by"),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [
+  uniqueIndex("news_posts_slug_idx").on(t.slug),
+  index("news_posts_status_idx").on(t.status),
+  index("news_posts_category_id_idx").on(t.category_id),
+  index("news_posts_featured_idx").on(t.featured),
+  index("news_posts_created_at_idx").on(t.created_at),
+  // Mirrors the partial index in sql/schema.sql; serves the public listing.
+  index("news_posts_published_idx").on(t.publish_at, t.created_at),
+]);
+
 export const auditLogs = pgTable("audit_logs", {
   id: id(),
   user_id: uuid("user_id"),
@@ -206,6 +249,14 @@ export const homepageFeaturedProductsRelations = relations(homepageFeaturedProdu
   product: one(products, { fields: [homepageFeaturedProducts.product_id], references: [products.id] }),
 }));
 
+export const newsCategoriesRelations = relations(newsCategories, ({ many }) => ({
+  posts: many(newsPosts),
+}));
+
+export const newsPostsRelations = relations(newsPosts, ({ one }) => ({
+  category: one(newsCategories, { fields: [newsPosts.category_id], references: [newsCategories.id] }),
+}));
+
 export type ProfileRow = typeof profiles.$inferSelect;
 export type ProductRow = typeof products.$inferSelect;
 export type BrandRow = typeof brands.$inferSelect;
@@ -213,3 +264,5 @@ export type CategoryRow = typeof categories.$inferSelect;
 export type QuoteRequestRow = typeof quoteRequests.$inferSelect;
 export type HeroSlideRow = typeof heroSlides.$inferSelect;
 export type MediaRow = typeof media.$inferSelect;
+export type NewsPostRow = typeof newsPosts.$inferSelect;
+export type NewsCategoryRow = typeof newsCategories.$inferSelect;

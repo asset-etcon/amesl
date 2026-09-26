@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import { siteSettings } from "@/db/schema";
 
 export const metadata: Metadata = {
-  title: "Contact | Asset Matrix Energy",
+  title: "Contact",
+  alternates: { canonical: "/contact" },
   description: "Contact Asset Matrix Energy Services Limited in Lagos, Nigeria for testing, diagnostics, reliability, instrumentation and maintenance solutions.",
 };
 

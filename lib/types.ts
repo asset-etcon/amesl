@@ -138,6 +138,47 @@ export interface AuditLog {
   created_at: string;
 }
 
+export type NewsStatus = "draft" | "published" | "archived";
+
+export interface NewsCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  status: "active" | "inactive";
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewsPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  /** Rich-text HTML, sanitised on write. Render only via `sanitizeRichText`. */
+  body: string;
+  cover_image: string;
+  cover_image_alt: string;
+  category_id: string | null;
+  status: NewsStatus;
+  featured: boolean;
+  /** Null means "publish immediately"; a future value holds the post back. */
+  publish_at: string | null;
+  seo_title: string;
+  seo_description: string;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A post joined with its category, as the public listing and post page need it. */
+export interface NewsPostWithCategory extends NewsPost {
+  category_name: string | null;
+  category_slug: string | null;
+}
+
 export const PRODUCT_STATUS_LABELS: Record<ProductStatus, string> = {
   draft: "Draft",
   published: "Published",
@@ -151,4 +192,16 @@ export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
   negotiating: "Negotiating",
   completed: "Completed",
   cancelled: "Cancelled",
+};
+
+export const NEWS_STATUS_LABELS: Record<NewsStatus, string> = {
+  draft: "Draft",
+  published: "Published",
+  archived: "Archived",
+};
+
+export const NEWS_STATUS_DESCRIPTIONS: Record<NewsStatus, string> = {
+  draft: "Only visible in the admin.",
+  published: "Visible to the public, subject to any scheduled date.",
+  archived: "Removed from the public site but kept for reference.",
 };

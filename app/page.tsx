@@ -1,13 +1,31 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 import { HeroSlider, type HeroSlideData } from "@/components/hero-slider";
 import { Footer } from "@/components/footer";
 import { ProductCard, type CardProduct } from "@/components/public/product-card";
 import { db } from "@/lib/db";
-import { products, brands, heroSlides as heroSlidesTable, homepageFeaturedProducts, productImages } from "@/db/schema";
+import { products, brands, heroSlides as heroSlidesTable, homepageFeaturedProducts, productImages, newsPosts, newsCategories } from "@/db/schema";
 import { eq, inArray, asc, desc } from "drizzle-orm";
+import { newsOrder, newsPublishedAt, publishedNewsWhere } from "@/lib/news";
+import { formatDate } from "@/lib/utils";
 import { ArrowRight, Activity, Gauge, ScanLine, Radio, GraduationCap, Zap, Waves, Move3D, Thermometer, Crosshair, Settings2, ShieldCheck, Globe2, Wrench, ClipboardCheck } from "@/components/icons";
+
+type LatestNews = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  categoryName: string | null;
+  publishedAt: string;
+};
+
+// No `title` here on purpose: the root layout's `title.default` is already the
+// full homepage title, and adding one would run it through `title.template`.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" },
+};
 
 const capabilities = [
   { icon: Activity, title: "Asset reliability", text: "Keep critical equipment performing as it should." },
@@ -82,8 +100,9 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   let heroSlides: HeroSlideData[] = [];
   let featuredCards: CardProduct[] = [];
+  let latestNews: LatestNews[] = [];
   try {
-    const [slideRows, featuredRows] = await Promise.all([
+    const [slideRows, featuredRows, newsRows] = await Promise.all([
       db
         .select({
           image_desktop: heroSlidesTable.image_desktop,
@@ -111,6 +130,22 @@ export default async function Home() {
         .where(eq(products.status, "published"))
         .orderBy(asc(homepageFeaturedProducts.display_order))
         .limit(8),
+      // Uses the same shared visibility predicate as /news, so a draft or a
+      // scheduled post can never appear on the homepage.
+      db
+        .select({
+          slug: newsPosts.slug,
+          title: newsPosts.title,
+          excerpt: newsPosts.excerpt,
+          publish_at: newsPosts.publish_at,
+          created_at: newsPosts.created_at,
+          category_name: newsCategories.name,
+        })
+        .from(newsPosts)
+        .leftJoin(newsCategories, eq(newsPosts.category_id, newsCategories.id))
+        .where(publishedNewsWhere())
+        .orderBy(...newsOrder)
+        .limit(3),
     ]);
 
     heroSlides = slideRows.map((s) => ({
@@ -140,6 +175,14 @@ export default async function Home() {
       categoryName: null,
       shortDescription: p.short_description,
       imageUrl: imageMap.get(p.product_id) ?? null,
+    }));
+
+    latestNews = newsRows.map((row) => ({
+      slug: row.slug,
+      title: row.title,
+      excerpt: row.excerpt,
+      categoryName: row.category_name,
+      publishedAt: newsPublishedAt({ publish_at: row.publish_at, created_at: row.created_at }).toISOString(),
     }));
   } catch {
   }
@@ -184,6 +227,32 @@ export default async function Home() {
               ))}
             </div>
             <Link className="text-link" href="/products">View the full catalogue <ArrowRight size={16} /></Link>
+          </section>
+        )}
+
+        {latestNews.length > 0 && (
+          <section className="so-section" style={{ paddingTop: 0 }}>
+            <div className="section-heading">
+              <div>
+                <Eyebrow>Latest news</Eyebrow>
+                <h2>News &amp; updates<br />from our team.</h2>
+              </div>
+              <p>Company announcements, new products, partnerships and training from Asset Matrix Energy.</p>
+            </div>
+            <div className="nw-list">
+              {latestNews.map((item) => (
+                <article className="nw-card" key={item.slug}>
+                  <span className="nw-chip">{item.categoryName ?? "Update"}</span>
+                  <h3><Link href={`/news/${item.slug}`}>{item.title}</Link></h3>
+                  {item.excerpt ? <p>{item.excerpt.slice(0, 150)}</p> : null}
+                  <div className="nw-meta">
+                    <time dateTime={item.publishedAt}>{formatDate(item.publishedAt)}</time>
+                    <Link href={`/news/${item.slug}`} aria-label={`Read ${item.title}`}>Read more <ArrowRight size={14} /></Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <Link className="text-link" href="/news">All news &amp; updates <ArrowRight size={16} /></Link>
           </section>
         )}
 

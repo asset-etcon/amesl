@@ -2,10 +2,11 @@
 
 import { z } from "zod";
 import { requireRole } from "@/lib/auth";
+import { actionErrorMessage, rethrowIfControlFlow } from "@/lib/action-guard";
 import { createSignedUploadUrl, objectKeyFor, publicUrlFor } from "@/lib/storage";
 import type { StorageKind } from "@/lib/storage";
 
-const kindSchema = z.enum(["productImages", "productDocuments", "media", "brandLogos", "heroImages"]);
+const kindSchema = z.enum(["productImages", "productDocuments", "media", "brandLogos", "heroImages", "newsImages"]);
 const contentTypeSchema = z.enum(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const fileNameSchema = z.string().trim().min(1).max(160);
 
@@ -16,9 +17,11 @@ export type UploadAssetResult = { ok: true; url: string; uploadUrl: string } | {
  * the file directly to object storage; we never hold bytes on the server.
  */
 export async function uploadAssetAction(input: { kind: string; fileName: string; contentType: string }): Promise<UploadAssetResult> {
-  try {
-    await requireRole("media");
+  // Authorisation runs *outside* the try: `requireRole` redirects unauthenticated
+  // callers by throwing, and a blanket catch would swallow that signal.
+  await requireRole("media");
 
+  try {
     const parsed = z
       .object({ kind: kindSchema, contentType: contentTypeSchema, fileName: fileNameSchema })
       .safeParse(input);
@@ -28,6 +31,7 @@ export async function uploadAssetAction(input: { kind: string; fileName: string;
     const uploadUrl = await createSignedUploadUrl(key, parsed.data.contentType);
     return { ok: true, url: publicUrlFor(key), uploadUrl };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Could not prepare the upload." };
+    rethrowIfControlFlow(err);
+    return { ok: false, error: actionErrorMessage(err, "Could not prepare the upload.") };
   }
 }

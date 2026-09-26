@@ -179,8 +179,13 @@ create table if not exists public.hero_slides (
   cta_href text not null default '',
   status text not null default 'active' check (status in ('active', 'inactive')),
   display_order integer not null default 0,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
+
+-- Added after the table shipped: the set_updated_at trigger below assigns
+-- new.updated_at, which cannot work on a table that has no such column.
+alter table public.hero_slides add column if not exists updated_at timestamptz not null default now();
 
 drop trigger if exists hero_slides_set_updated_at on public.hero_slides;
 create trigger hero_slides_set_updated_at
@@ -219,6 +224,68 @@ create table if not exists public.site_settings (
 drop trigger if exists site_settings_set_updated_at on public.site_settings;
 create trigger site_settings_set_updated_at
   before update on public.site_settings
+  for each row execute function public.set_updated_at();
+
+-- ---------- news_categories ----------
+create table if not exists public.news_categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,
+  description text not null default '',
+  status text not null default 'active' check (status in ('active', 'inactive')),
+  display_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists news_categories_status_idx on public.news_categories (status);
+
+drop trigger if exists news_categories_set_updated_at on public.news_categories;
+create trigger news_categories_set_updated_at
+  before update on public.news_categories
+  for each row execute function public.set_updated_at();
+
+-- ---------- news_posts ----------
+-- `body` holds rich text HTML authored in the admin. It is sanitised against an
+-- allowlist in the server action before it is written (see lib/sanitize.ts) and
+-- is only ever rendered through the sanitiser's output, never raw.
+create table if not exists public.news_posts (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  slug text not null unique,
+  excerpt text not null default '',
+  body text not null default '',
+  cover_image text not null default '',
+  cover_image_alt text not null default '',
+  category_id uuid references public.news_categories(id) on delete set null,
+  status text not null default 'draft' check (status in ('draft', 'published', 'archived')),
+  featured boolean not null default false,
+  -- Null means "publish as soon as the status flips to published". A future
+  -- value holds the post back until that instant; every public read filters on
+  -- it via the shared predicate in lib/news.ts.
+  publish_at timestamptz,
+  seo_title text not null default '',
+  seo_description text not null default '',
+  created_by uuid references public.profiles(id) on delete set null,
+  updated_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists news_posts_status_idx on public.news_posts (status);
+create index if not exists news_posts_category_id_idx on public.news_posts (category_id);
+create index if not exists news_posts_featured_idx on public.news_posts (featured);
+-- Partial index matching the exact predicate every public listing uses:
+-- status = 'published' ordered by publish_at then created_at.
+create index if not exists news_posts_published_idx
+  on public.news_posts (publish_at desc, created_at desc)
+  where status = 'published';
+-- Sitemap ordering walks every visible post by recency.
+create index if not exists news_posts_created_at_idx on public.news_posts (created_at desc);
+
+drop trigger if exists news_posts_set_updated_at on public.news_posts;
+create trigger news_posts_set_updated_at
+  before update on public.news_posts
   for each row execute function public.set_updated_at();
 
 -- ---------- audit_logs ----------

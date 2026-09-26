@@ -1,11 +1,12 @@
 import { uploadAssetAction } from "@/app/actions/upload";
+import type { StorageKind } from "@/lib/storage";
 
 /**
  * Uploads a file straight from the browser to R2 via a server-issued
  * presigned PUT URL, then returns the final public URL.
  */
 export async function uploadFileToStorage(
-  kind: "productImages" | "productDocuments" | "media" | "brandLogos" | "heroImages",
+  kind: StorageKind,
   file: File
 ): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   const prepared = await uploadAssetAction({ kind, fileName: file.name, contentType: file.type });

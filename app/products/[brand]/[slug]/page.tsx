@@ -17,21 +17,23 @@ interface Params {
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
-  const { slug } = await params;
+  const { brand, slug } = await params;
   const product = await db.query.products.findFirst({
     where: and(eq(products.slug, slug), eq(products.status, "published")),
     with: { brand: true, category: true },
   });
 
-  if (!product) return { title: "Product not found | Asset Matrix Energy" };
+  if (!product) return { title: "Product not found" };
   const brandName = product.brand?.name;
   const title = product.seo_title || (brandName ? `${product.name} — ${brandName}` : product.name);
   const description = product.seo_description || product.short_description || `Request a quote for ${product.name} with Asset Matrix Energy.`;
+  const path = `/products/${product.brand?.slug ?? brand}/${slug}`;
 
   return {
-    title: `${title} | Asset Matrix Energy`,
+    title,
     description,
-    openGraph: { title, description, type: "website" },
+    alternates: { canonical: path },
+    openGraph: { title, description, type: "website", url: path },
   };
 }
 

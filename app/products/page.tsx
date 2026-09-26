@@ -10,11 +10,6 @@ import { products, brands as brandsTable, categories, productImages } from "@/db
 import { eq, and, inArray, asc, desc, count, ilike } from "drizzle-orm";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Product Catalogue | Asset Matrix Energy",
-  description: "Browse specialist industrial reliability, condition monitoring, testing, diagnostics and instrumentation equipment represented by Asset Matrix Energy.",
-};
-
 const PER_PAGE = 12;
 
 interface SearchParams {
@@ -23,6 +18,53 @@ interface SearchParams {
   category?: string;
   sort?: string;
   page?: string;
+}
+
+const CATALOGUE_DESCRIPTION =
+  "Browse specialist industrial reliability, condition monitoring, testing, diagnostics and instrumentation equipment represented by Asset Matrix Energy.";
+
+/**
+ * One route serves several distinct views, so the canonical has to be computed
+ * per request:
+ *   /products            the brand wall — self-canonical
+ *   /products?brand=x    a real brand landing page — self-canonical
+ *   /products?q=…&page=2 duplicates of the above — folded back to the base
+ * Internal search results are `noindex` so they never compete with /products.
+ */
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
+  const sp = await searchParams;
+  const brand = (sp.brand ?? "").trim();
+  const isSearch = Boolean((sp.q ?? "").trim());
+
+  if (isSearch) {
+    return {
+      title: "Search",
+      robots: { index: false, follow: true },
+      alternates: { canonical: brand ? `/products?brand=${brand}` : "/products" },
+    };
+  }
+
+  if (!brand) {
+    return { title: "Product Catalogue", description: CATALOGUE_DESCRIPTION, alternates: { canonical: "/products" } };
+  }
+
+  const brandRow = await db
+    .select({ name: brandsTable.name, description: brandsTable.description })
+    .from(brandsTable)
+    .where(and(eq(brandsTable.slug, brand), eq(brandsTable.status, "active")))
+    .limit(1);
+
+  // An unknown or inactive brand slug must not be indexable as a thin page.
+  if (!brandRow[0]) {
+    return { title: "Product Catalogue", robots: { index: false, follow: true }, alternates: { canonical: "/products" } };
+  }
+
+  return {
+    title: `${brandRow[0].name} Products`,
+    description: brandRow[0].description || `Browse ${brandRow[0].name} equipment supplied and supported by Asset Matrix Energy.`,
+    alternates: { canonical: `/products?brand=${brand}` },
+    openGraph: { title: `${brandRow[0].name} Products`, description: CATALOGUE_DESCRIPTION, url: `/products?brand=${brand}` },
+  };
 }
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
