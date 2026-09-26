@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { ArrowLeft, Rocket, Upload, X } from "lucide-react";
 import { Button, Card, Field, FormSection, Input, Select, Switch, Textarea, useToast } from "@/components/admin/ui";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { uploadFileToStorage } from "@/lib/client-upload";
@@ -82,6 +82,16 @@ export function NewsForm({ post, categories }: { post?: NewsFormPost; categories
 
   const onValid = async (values: NewsPostInput) => {
     setBusy(true);
+    // The picker yields a wall-clock string with no offset. Resolve it to a real
+    // instant here, in the browser, because the server cannot know the admin's
+    // timezone: read as UTC it would shift every scheduled time by their offset,
+    // and "Publish now" would leave the article hidden until that shift elapsed.
+    let publishAtIso: string | undefined;
+    if (values.publish_at) {
+      const instant = new Date(values.publish_at as string);
+      if (!Number.isNaN(instant.getTime())) publishAtIso = instant.toISOString();
+    }
+
     const result = await saveNewsPostAction({
       id: post?.id,
       title: values.title,
@@ -93,7 +103,7 @@ export function NewsForm({ post, categories }: { post?: NewsFormPost; categories
       category_id: values.category_id || null,
       status: values.status,
       featured: values.featured ?? false,
-      publish_at: values.publish_at || undefined,
+      publish_at: publishAtIso,
       seo_title: values.seo_title,
       seo_description: values.seo_description,
     });
@@ -127,6 +137,31 @@ export function NewsForm({ post, categories }: { post?: NewsFormPost; categories
     setValue("status", "published");
     void handleSubmit(onValid)();
   };
+
+  /**
+   * Publishes whatever is on screen, immediately.
+   *
+   * Goes through the normal submit path rather than calling a server action with
+   * just an id, because the editor may have unsaved changes and dropping them
+   * without warning would be the worst possible outcome of a button labelled
+   * "Publish". The current local minute is written into the picker and the usual
+   * browser-side conversion turns it into a real instant, so any future schedule
+   * is discarded -- which is the entire point of the button.
+   */
+  const publishNow = () => {
+    setValue("status", "published");
+    setValue("publish_at", toLocalInputValue(new Date().toISOString()));
+    void handleSubmit(onValid)();
+  };
+
+  // A pending future schedule is the one case where "Save & publish" would lie:
+  // it sets status=published but leaves the date alone, so the article stays
+  // hidden until then. "Publish now" replaces it there, and only there. A post
+  // that is already live and unscheduled needs neither button.
+  const scheduledInstant = publishAt ? new Date(publishAt).getTime() : Number.NaN;
+  const hasFutureSchedule = !Number.isNaN(scheduledInstant) && scheduledInstant > Date.now();
+  const showPublishNow = hasFutureSchedule || status === "published";
+  const showSaveAndPublish = !hasFutureSchedule && status !== "published";
 
   return (
     <form onSubmit={handleSubmit(onValid)} className="space-y-5">
@@ -294,13 +329,29 @@ export function NewsForm({ post, categories }: { post?: NewsFormPost; categories
         </FormSection>
       </Card>
 
-      <div className="flex items-center justify-end gap-2 pb-4">
+      <div className="flex flex-wrap items-center justify-end gap-2 pb-4">
         <Button type="button" variant="ghost" onClick={() => router.push("/admin/news")}>
           Cancel
         </Button>
-        {status !== "published" ? (
+        {showSaveAndPublish ? (
           <Button type="button" variant="outline" busy={busy} onClick={saveAndPublish}>
             Save &amp; publish
+          </Button>
+        ) : null}
+        {showPublishNow ? (
+          <Button
+            type="button"
+            variant={hasFutureSchedule ? "accent" : "outline"}
+            busy={busy}
+            onClick={publishNow}
+            title={
+              hasFutureSchedule
+                ? "Publish immediately and discard the scheduled date"
+                : "Set the publication date to now and make the article live"
+            }
+          >
+            <Rocket size={15} />
+            Publish now
           </Button>
         ) : null}
         <Button type="submit" busy={busy}>

@@ -99,6 +99,26 @@ const localDateString = z
   .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/, "Use the date and time picker")
   .refine((value) => !Number.isNaN(new Date(value).getTime()), "That date is not a real date");
 
+/**
+ * A fully qualified instant, e.g. "2026-09-26T14:30:00.000Z".
+ *
+ * Preferred by the editor, which converts the `datetime-local` value in the
+ * browser before submitting. A wall-clock string with no offset is ambiguous:
+ * read on a UTC server it resolves to the wrong instant for any admin outside
+ * UTC, which shifts the publication time by their offset and, for "Publish
+ * now", leaves the article hidden until the shift elapses. The browser is the
+ * only place that knows the admin's timezone, so it resolves the instant and
+ * sends an unambiguous value.
+ */
+const isoInstant = z
+  .string()
+  .trim()
+  .regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/,
+    "Use the date and time picker",
+  )
+  .refine((value) => !Number.isNaN(new Date(value).getTime()), "That date is not a real date");
+
 export const newsPostSchema = z.object({
   title: z.string().trim().min(2, "Title is required").max(200),
   slug: z.string().trim().max(200).optional(),
@@ -112,7 +132,7 @@ export const newsPostSchema = z.object({
   // via defaultValues, and a schema-level default splits the resolver's input
   // and output types.
   featured: z.boolean(),
-  publish_at: z.union([localDateString, z.literal("")]).optional(),
+  publish_at: z.union([isoInstant, localDateString, z.literal("")]).optional(),
   seo_title: z.string().trim().max(200).optional(),
   seo_description: z.string().trim().max(400).optional(),
 });
