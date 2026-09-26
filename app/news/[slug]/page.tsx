@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { newsPosts, newsCategories } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { isNewsVisible, newsPublishedAt, publishedNewsWhere } from "@/lib/news";
+import { toIsoTimestamp } from "@/lib/dates";
 import { formatDate } from "@/lib/utils";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { Navbar } from "@/components/navbar";
@@ -130,7 +131,10 @@ export default async function NewsPostPage({ params }: { params: Promise<Params>
     description: post.seo_description || post.excerpt || undefined,
     image: post.cover_image ? [post.cover_image] : undefined,
     datePublished: published.toISOString(),
-    dateModified: post.publish_at ?? post.created_at,
+    // Normalised, not the raw column: `timestamptz` arrives as Postgres text
+    // ("2026-09-23 16:18:44.799753+00"), which is not a valid ISO 8601 date and
+    // makes Google treat the article's structured data as malformed.
+    dateModified: toIsoTimestamp(post.publish_at ?? post.created_at, published.toISOString()),
     mainEntityOfPage: { "@type": "WebPage", "@id": `${siteUrl}/news/${post.slug}` },
     author: { "@type": "Organization", name: "Asset Matrix Energy" },
     publisher: {

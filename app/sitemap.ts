@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { brands, newsCategories, newsPosts, products } from "@/db/schema";
 import { activeNewsCategoryWhere, newsOrder, publishedNewsWhere } from "@/lib/news";
+import { toIsoTimestamp } from "@/lib/dates";
 
 const siteUrl = (process.env.SITE_URL ?? "https://assetmatrixenergy.com").replace(/\/+$/, "");
 
@@ -60,10 +61,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: url("/news"), lastModified: nowIso, changeFrequency: "daily", priority: 0.8 },
   ];
 
+  // Every lastModified below goes through toIsoTimestamp: the `timestamptz`
+  // columns arrive as Postgres text ("2026-09-23 16:18:44.799753+00"), which is
+  // not a valid W3C dateTime and makes Google reject the whole sitemap.
   const newsEntries: Entry[] = postRows.map((post) => ({
     url: url(`/news/${post.slug}`),
     // For a scheduled post the scheduled instant is the meaningful date.
-    lastModified: new Date(post.updated_at ?? post.publish_at ?? post.created_at).toISOString(),
+    lastModified: toIsoTimestamp(post.updated_at ?? post.publish_at ?? post.created_at, nowIso),
     changeFrequency: "monthly",
     priority: 0.7,
   }));
@@ -73,19 +77,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...newsEntries,
     ...newsCategoryRows.map((row) => ({
       url: url(`/news/category/${row.slug}`),
-      lastModified: row.updated_at ?? nowIso,
+      lastModified: toIsoTimestamp(row.updated_at, nowIso),
       changeFrequency: "weekly" as const,
       priority: 0.5,
     })),
     ...brandRows.map((row) => ({
       url: url(`/products?brand=${row.slug}`),
-      lastModified: row.updated_at ?? nowIso,
+      lastModified: toIsoTimestamp(row.updated_at, nowIso),
       changeFrequency: "weekly" as const,
       priority: 0.6,
     })),
     ...productRows.map((row) => ({
       url: url(`/products/${row.brand_slug}/${row.slug}`),
-      lastModified: row.updated_at ?? nowIso,
+      lastModified: toIsoTimestamp(row.updated_at, nowIso),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
