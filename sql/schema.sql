@@ -155,11 +155,18 @@ create table if not exists public.quote_requests (
     check (status in ('new', 'contacted', 'quotation_sent', 'negotiating', 'completed', 'cancelled')),
   internal_notes text not null default '',
   archived boolean not null default false,
+  -- Salted hash of the submitting client, used for cross-instance rate limiting.
+  submitter_hash text,
   created_at timestamptz not null default now()
 );
 
 create index if not exists quote_requests_status_idx on public.quote_requests (status);
 create index if not exists quote_requests_created_at_idx on public.quote_requests (created_at desc);
+
+-- Added after the table shipped: salted client hash for cross-instance rate limiting.
+-- Idempotent, so re-running this file is safe on both old and new databases.
+alter table public.quote_requests add column if not exists submitter_hash text;
+create index if not exists quote_requests_submitter_hash_idx on public.quote_requests (submitter_hash);
 
 -- ---------- hero_slides ----------
 create table if not exists public.hero_slides (

@@ -49,9 +49,18 @@ export const quoteSchema = z.object({
   company_name: z.string().trim().max(160).optional(),
   message: z.string().trim().max(2000).optional(),
   quantity: z.coerce.number().int().min(1).max(100000).default(1),
+  /** Honeypot — hidden from people, appealing to bots. Must arrive empty. */
+  website: z.string().max(200).optional(),
+  /** Client clock when the form was shown, used to reject instant submissions. */
+  started_at: z.coerce.number().int().nonnegative().optional(),
 });
 
 export type QuoteInput = z.infer<typeof quoteSchema>;
+
+/** Submissions closer together than this are treated as automated. */
+export const QUOTE_MIN_FILL_MS = 2500;
+/** Ceiling on a form session, so a stale tab cannot bypass the timing check. */
+export const QUOTE_MAX_FILL_MS = 6 * 60 * 60 * 1000;
 
 export const heroSlideSchema = z.object({
   headline: z.string().trim().min(2, "Headline is required").max(160),

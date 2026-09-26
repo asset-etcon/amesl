@@ -16,17 +16,19 @@ interface Props {
   onClose: () => void;
 }
 
-const initial = { name: "", email: "", phone: "", company: "", quantity: "1", message: "" };
+const initial = { name: "", email: "", phone: "", company: "", quantity: "1", message: "", website: "" };
 
 export function QuoteModal({ open, product, onClose }: Props) {
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
+  const [openedAt, setOpenedAt] = useState(0);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!open) return;
     const t = window.setTimeout(() => {
+      setOpenedAt(Date.now());
       setForm(initial);
       setErrors({});
       setDone(false);
@@ -69,6 +71,8 @@ export function QuoteModal({ open, product, onClose }: Props) {
         company_name: form.company.trim(),
         message: form.message.trim(),
         quantity: Math.max(1, Math.floor(Number(form.quantity) || 1)),
+        website: form.website,
+        started_at: openedAt || undefined,
       });
       if (res.ok) setDone(true);
       else setErrors({ name: res.error ?? "Could not submit your request. Please try again." });
@@ -99,6 +103,12 @@ export function QuoteModal({ open, product, onClose }: Props) {
               <button type="button" className="qm-close" onClick={onClose} aria-label="Close"><X size={20} /></button>
             </div>
             <div className="qm-grid">
+              <div className="qm-trap" aria-hidden="true">
+                <label>
+                  <span>Website</span>
+                  <input type="text" name="website" tabIndex={-1} autoComplete="off" value={form.website} onChange={set("website")} />
+                </label>
+              </div>
               <label className="qm-field qm-span">
                 <span>Full name *</span>
                 <input value={form.name} onChange={set("name")} placeholder="e.g. Ada Obi" />

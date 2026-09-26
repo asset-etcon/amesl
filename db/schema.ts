@@ -119,10 +119,13 @@ export const quoteRequests = pgTable("quote_requests", {
   status: text("status").notNull().default("new"),
   internal_notes: text("internal_notes").notNull().default(""),
   archived: boolean("archived").notNull().default(false),
+  /** Salted hash of the submitting client, used for cross-instance rate limiting. */
+  submitter_hash: text("submitter_hash"),
   created_at: createdAt(),
 }, (t) => [
   index("quote_requests_status_idx").on(t.status),
   index("quote_requests_created_at_idx").on(t.created_at),
+  index("quote_requests_submitter_hash_idx").on(t.submitter_hash),
 ]);
 
 export const heroSlides = pgTable("hero_slides", {

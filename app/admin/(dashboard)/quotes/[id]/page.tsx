@@ -63,8 +63,10 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
           <Card className="p-5">
             <h2 className="text-[14.5px] font-extrabold text-[#0b1b29]">Customer</h2>
             <div className="mt-3 space-y-2.5">
-              <p className="text-[14px] font-bold text-[#152431]">{quote.customer_name}</p>
-              {quote.company_name && <p className="text-[12.5px] text-[#65727a]">{quote.company_name}</p>}
+              <p className="text-[14px] font-bold text-[#152431]">
+                {quote.customer_name}
+                {quote.company_name && <span className="ml-2 text-[12.5px] font-semibold text-[#65727a]">{quote.company_name}</span>}
+              </p>
               <div className="flex flex-wrap gap-2 pt-1">
                 <a
                   href={`mailto:${quote.customer_email}?subject=${encodeURIComponent(`Quote request — ${quote.product_name || "General enquiry"}`)}`}

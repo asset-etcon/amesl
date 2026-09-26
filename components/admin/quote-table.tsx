@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Archive, ArchiveRestore, Pencil, Trash2 } from "lucide-react";
-import { Badge, ConfirmDialog, EmptyState, quoteStatusTone, useToast } from "@/components/admin/ui";
+import { Badge, ConfirmDialog, EmptyState, Pagination, quoteStatusTone, useToast } from "@/components/admin/ui";
 import { QUOTE_STATUS_LABELS, type QuoteStatus } from "@/lib/types";
 import { deleteQuoteAction, toggleQuoteArchiveAction } from "@/app/admin/(dashboard)/quotes/actions";
 
@@ -12,6 +12,7 @@ export interface QuoteRow {
   id: string;
   customer_name: string;
   customer_email: string;
+  company_name: string;
   product_name: string;
   brand_name: string;
   quantity: number;
@@ -20,7 +21,16 @@ export interface QuoteRow {
   created_at: string;
 }
 
-export function QuoteTable({ rows }: { rows: QuoteRow[] }) {
+interface Props {
+  rows: QuoteRow[];
+  page: number;
+  pageCount: number;
+  total: number;
+  /** Current filter values, so pagination preserves the active search/sort/view. */
+  query: Record<string, string | undefined>;
+}
+
+export function QuoteTable({ rows, page, pageCount, total, query }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -36,6 +46,16 @@ export function QuoteTable({ rows }: { rows: QuoteRow[] }) {
         toast(result.error ?? "Failed.", "error");
       }
     });
+  };
+
+  const goToPage = (next: number) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value) params.set(key, value);
+    }
+    if (next > 1) params.set("page", String(next));
+    const qs = params.toString();
+    router.push(`/admin/quotes${qs ? `?${qs}` : ""}`, { scroll: false });
   };
 
   if (rows.length === 0) {
@@ -59,7 +79,10 @@ export function QuoteTable({ rows }: { rows: QuoteRow[] }) {
           {rows.map((row) => (
             <tr key={row.id} className={row.archived ? "opacity-55" : ""}>
               <td className="px-4 py-3">
-                <p className="text-[13.5px] font-bold text-[#152431]">{row.customer_name}</p>
+                <p className="text-[13.5px] font-bold text-[#152431]">
+                  {row.customer_name}
+                  {row.company_name && <span className="ml-1.5 text-[11.5px] font-semibold text-[#8a969c]">{row.company_name}</span>}
+                </p>
                 <p className="text-[11.5px] text-[#8a969c]">{row.customer_email}</p>
               </td>
               <td className="hidden max-w-[260px] px-4 py-3 md:table-cell">
@@ -94,6 +117,10 @@ export function QuoteTable({ rows }: { rows: QuoteRow[] }) {
           ))}
         </tbody>
       </table>
+
+      <div className="border-t border-[#eef1f0]">
+        <Pagination page={page} pageCount={pageCount} total={total} onPage={goToPage} />
+      </div>
 
       <ConfirmDialog
         open={deleteId !== null}

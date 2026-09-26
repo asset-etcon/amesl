@@ -52,13 +52,40 @@ function connectionString(): string {
   return u.toString();
 }
 
+/**
+ * Aiven's smallest plans cap Postgres at `max_connections = 20`, reserve 3 for
+ * superusers, and hold ~13 slots for their own internal backends and monitoring.
+ * That leaves roughly 4 usable connections for this application, and every
+ * process that opens a pool spends from the same budget — on Vercel each
+ * serverless instance builds its own pool. Keep the default small and return
+ * connections quickly: requests queue on the pool, which is correct, whereas
+ * exceeding the server limit fails every query at once.
+ *
+ * Set PG_POOL_MAX=1 to be safe with several concurrent instances on a small
+ * plan, or raise the Aiven plan before increasing it.
+ */
+function poolMax(): number {
+  const configured = Number(process.env.PG_POOL_MAX);
+  if (Number.isFinite(configured) && configured > 0) return Math.min(configured, 10);
+  return process.env.NODE_ENV === "production" ? 2 : 3;
+}
+
 function createPool(): Pool {
   return new Pool({
     connectionString: connectionString(),
     ssl: PG_SSL ? { rejectUnauthorized: false } : false,
-    max: Number(process.env.PG_POOL_MAX) || 5,
-    connectionTimeoutMillis: 10_000,
-    idleTimeoutMillis: 30_000,
+    max: poolMax(),
+    // Makes this app's connections identifiable in pg_stat_activity when
+    // diagnosing a full server.
+    application_name: "amesl",
+    // Queue for a free slot rather than failing immediately when one is scarce.
+    connectionTimeoutMillis: 15_000,
+    // Hand slots back to Postgres quickly so idle bursts do not hold capacity.
+    idleTimeoutMillis: 10_000,
+    // Recycle connections periodically; long-lived proxies drop idle sockets.
+    maxUses: 500,
+    // A stuck query must not pin one of the few available slots.
+    statement_timeout: 10_000,
   });
 }
 
