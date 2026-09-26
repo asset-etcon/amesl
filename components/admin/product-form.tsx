@@ -379,7 +379,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
         </div>
       </div>
 
-      <div className="sticky bottom-0 -mx-6 flex flex-wrap items-center justify-end gap-2 border-t border-[#e4e9ea] bg-white/95 px-6 py-4 backdrop-blur lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center justify-end gap-2 border-t border-[#e4e9ea] bg-white/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <Link href="/admin/products" className="inline-flex h-10 items-center rounded-lg bg-[#e7a42b] px-4 text-[12px] font-bold text-[#172633] hover:bg-[#f3bb4e]">
           Cancel
         </Link>

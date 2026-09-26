@@ -45,8 +45,8 @@ export function UsersTable({ rows, currentUserId }: { rows: UserRow[]; currentUs
         </Button>
       </div>
 
-      <div className="rounded-xl border border-[#e4e9ea] bg-white shadow-[0_1px_2px_rgba(11,27,41,0.04)]">
-        <table className="w-full text-left">
+      <div className="overflow-x-auto rounded-xl border border-[#e4e9ea] bg-white shadow-[0_1px_2px_rgba(11,27,41,0.04)]">
+        <table className="w-full min-w-[340px] text-left">
           <thead>
             <tr className="border-b border-[#eef1f0] text-[11px] font-extrabold uppercase tracking-wide text-[#8a969c]">
               <th className="px-4 py-3">User</th>
@@ -65,7 +65,7 @@ export function UsersTable({ rows, currentUserId }: { rows: UserRow[]; currentUs
                     </span>
                     <div>
                       <p className="text-[13.5px] font-bold text-[#152431]">
-                        {row.full_name || "—"}
+                        {row.full_name || "Ã¢â‚¬â€"}
                         {row.id === currentUserId && <span className="ml-2 text-[11px] font-semibold text-[#8a969c]">(you)</span>}
                       </p>
                       <p className="text-[11.5px] text-[#8a969c]">{row.email}</p>

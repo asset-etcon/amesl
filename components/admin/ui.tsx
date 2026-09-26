@@ -140,12 +140,12 @@ export function EmptyState({ title, description, action }: { title: string; desc
 
 export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="text-[22px] font-extrabold tracking-tight text-[#0b1b29]">{title}</h1>
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-6 sm:gap-4">
+      <div className="min-w-0">
+        <h1 className="text-[19px] font-extrabold tracking-tight text-[#0b1b29] sm:text-[22px]">{title}</h1>
         {description && <p className="mt-1 text-[13px] text-[#65727a]">{description}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
@@ -187,7 +187,7 @@ export function Modal({ open, onClose, title, children, footer, wide }: { open: 
           </button>
         </div>
         <div className="max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="flex items-center justify-end gap-2 border-t border-[#eef1f0] px-5 py-3.5">{footer}</div>}
+        {footer && <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[#eef1f0] px-5 py-3.5">{footer}</div>}
       </div>
     </div>
   );
@@ -241,7 +241,7 @@ export function ConfirmDialog({
 export function Pagination({ page, pageCount, total, onPage }: { page: number; pageCount: number; total: number; onPage: (p: number) => void }) {
   if (pageCount <= 1) return null;
   return (
-    <div className="flex items-center justify-between px-4 py-3 text-[12.5px] text-[#65727a]">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-[12.5px] text-[#65727a]">
       <span>{total.toLocaleString()} total</span>
       <div className="flex items-center gap-2">
         <span>
@@ -290,11 +290,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="pointer-events-none fixed bottom-5 right-5 z-[60] flex flex-col gap-2">
+      {/* inset rather than right-anchored, so a long message cannot run off the
+          edge of a phone screen */}
+      <div className="pointer-events-none fixed inset-x-4 bottom-4 z-[60] flex flex-col items-center gap-2 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:items-end">
         {items.map((item) => {
           const Icon = toastIcon[item.tone];
           return (
-            <div key={item.id} className="pointer-events-auto flex items-center gap-2.5 rounded-xl border border-[#e4e9ea] bg-white px-4 py-3 text-[13px] font-semibold text-[#152431] shadow-lg">
+            <div key={item.id} className="pointer-events-auto flex w-full max-w-sm items-center gap-2.5 rounded-xl border border-[#e4e9ea] bg-white px-4 py-3 text-[13px] font-semibold text-[#152431] shadow-lg">
               <Icon size={17} className={toastIconColor[item.tone]} />
               {item.message}
             </div>

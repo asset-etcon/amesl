@@ -63,8 +63,8 @@ export function QuoteTable({ rows, page, pageCount, total, query }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-[#e4e9ea] bg-white shadow-[0_1px_2px_rgba(11,27,41,0.04)]">
-      <table className="w-full text-left">
+    <div className="overflow-x-auto rounded-xl border border-[#e4e9ea] bg-white shadow-[0_1px_2px_rgba(11,27,41,0.04)]">
+      <table className="w-full min-w-[340px] text-left">
         <thead>
           <tr className="border-b border-[#eef1f0] text-[11px] font-extrabold uppercase tracking-wide text-[#8a969c]">
             <th className="px-4 py-3">Customer</th>

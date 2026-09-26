@@ -69,7 +69,7 @@ export function ProductTable({ rows, page, pageCount, total, canManage }: Props)
     run(deleteProductsAction(selected), `${selected.length} product(s) deleted.`);
 
   return (
-    <div className="rounded-xl border border-[#e4e9ea] bg-white shadow-[0_1px_2px_rgba(11,27,41,0.04)]">
+    <div className="overflow-x-auto rounded-xl border border-[#e4e9ea] bg-white shadow-[0_1px_2px_rgba(11,27,41,0.04)]">
       {canManage && selected.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 border-b border-[#eef1f0] bg-[#f7f9f8] px-4 py-2.5">
           <span className="mr-1 text-[12.5px] font-bold text-[#41515b]">{selected.length} selected</span>
@@ -104,7 +104,7 @@ export function ProductTable({ rows, page, pageCount, total, canManage }: Props)
           />
         </div>
       ) : (
-        <table className="w-full text-left">
+        <table className="w-full min-w-[340px] text-left">
           <thead>
             <tr className="border-b border-[#eef1f0] text-[11px] font-extrabold uppercase tracking-wide text-[#8a969c]">
               {canManage && (
@@ -142,12 +142,12 @@ export function ProductTable({ rows, page, pageCount, total, canManage }: Props)
                         {row.name}
                         {row.featured && <Star size={13} className="shrink-0 fill-[#e7a42b] text-[#e7a42b]" />}
                       </p>
-                      <p className="truncate text-[11.5px] text-[#8a969c]">/{row.brand_name?.toLowerCase()}/…</p>
+                      <p className="truncate text-[11.5px] text-[#8a969c]">/{row.brand_name?.toLowerCase()}/Ã¢â‚¬Â¦</p>
                     </div>
                   </Link>
                 </td>
-                <td className="hidden px-4 py-3 text-[13px] text-[#41515b] md:table-cell">{row.brand_name ?? "—"}</td>
-                <td className="hidden px-4 py-3 text-[13px] text-[#41515b] lg:table-cell">{row.category_name ?? "—"}</td>
+                <td className="hidden px-4 py-3 text-[13px] text-[#41515b] md:table-cell">{row.brand_name ?? "Ã¢â‚¬â€"}</td>
+                <td className="hidden px-4 py-3 text-[13px] text-[#41515b] lg:table-cell">{row.category_name ?? "Ã¢â‚¬â€"}</td>
                 <td className="px-4 py-3">
                   <Badge tone={productStatusTone[row.status]}>{row.status}</Badge>
                 </td>
