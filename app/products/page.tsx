@@ -78,7 +78,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     .select({ slug: brandsTable.slug, name: brandsTable.name, logo_url: brandsTable.logo_url })
     .from(brandsTable)
     .where(eq(brandsTable.status, "active"))
-    .orderBy(asc(brandsTable.name));
+    // Admins control this order with the "Display order" field on /admin/brands.
+    // Name is kept as a tiebreaker so two brands sharing a number cannot swap
+    // places between renders, which would make the wall look broken.
+    .orderBy(asc(brandsTable.display_order), asc(brandsTable.name));
 
   const isFiltered = Boolean(q || brand || (sp.sort && sp.sort !== "newest"));
 
