@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, MapPin, Phone, Mail } from "@/components/icons";
+import { BackToTop } from "@/components/public/back-to-top";
 import { db } from "@/lib/db";
 import { siteSettings } from "@/db/schema";
 
@@ -67,7 +68,7 @@ export async function Footer() {
       <div className="footer-bottom">
         <span>© {new Date().getFullYear()} {copyright}</span>
         <span>Nigeria <i /> Sub-Saharan Africa</span>
-        <Link href="/">Back to top ↑</Link>
+        <BackToTop />
       </div>
     </footer>
   );
