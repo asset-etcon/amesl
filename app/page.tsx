@@ -5,10 +5,12 @@ import { Navbar } from "@/components/navbar";
 import { HeroSlider, type HeroSlideData } from "@/components/hero-slider";
 import { Footer } from "@/components/footer";
 import { ProductCard, type CardProduct } from "@/components/public/product-card";
+import { WhatsappLink } from "@/components/public/whatsapp-link";
 import { db } from "@/lib/db";
-import { products, brands, heroSlides as heroSlidesTable, homepageFeaturedProducts, productImages, newsPosts, newsCategories } from "@/db/schema";
+import { products, brands, heroSlides as heroSlidesTable, homepageFeaturedProducts, productImages, newsPosts, newsCategories, siteSettings } from "@/db/schema";
 import { eq, inArray, asc, desc } from "drizzle-orm";
 import { newsOrder, newsPublishedAt, publishedNewsWhere } from "@/lib/news";
+import { whatsappHref } from "@/lib/whatsapp";
 import { formatDate } from "@/lib/utils";
 import { ArrowRight, Activity, Gauge, ScanLine, Radio, GraduationCap, Zap, Waves, Move3D, Thermometer, Crosshair, Settings2, ShieldCheck, Globe2, Wrench, ClipboardCheck } from "@/components/icons";
 
@@ -101,8 +103,9 @@ export default async function Home() {
   let heroSlides: HeroSlideData[] = [];
   let featuredCards: CardProduct[] = [];
   let latestNews: LatestNews[] = [];
+  let whatsappNumber = "";
   try {
-    const [slideRows, featuredRows, newsRows] = await Promise.all([
+    const [slideRows, featuredRows, newsRows, settingRows] = await Promise.all([
       db
         .select({
           image_desktop: heroSlidesTable.image_desktop,
@@ -146,7 +149,10 @@ export default async function Home() {
         .where(publishedNewsWhere())
         .orderBy(...newsOrder)
         .limit(3),
+      db.select({ value: siteSettings.value }).from(siteSettings).where(eq(siteSettings.key, "whatsapp_number")),
     ]);
+
+    whatsappNumber = settingRows[0]?.value ?? "";
 
     heroSlides = slideRows.map((s) => ({
       headline: s.headline,
@@ -187,11 +193,15 @@ export default async function Home() {
   } catch {
   }
 
+  // The hero slider is a client component and cannot render the async
+  // WhatsappLink, so its href is resolved here and passed down as a prop.
+  const talkHref = whatsappHref(whatsappNumber, "Hi, I would like to talk to an engineer about an asset reliability challenge. I reached you via the homepage.", "mailto:info@assetmatrixenergy.com");
+
   return (
     <>
       <Navbar />
       <main>
-        <HeroSlider slides={heroSlides} />
+        <HeroSlider slides={heroSlides} whatsappHref={talkHref} />
 
         <section className="capability-band" id="capabilities">
           <div className="capability-heading"><Eyebrow>What we do</Eyebrow><h2>Engineering solutions<br />built around reliability.</h2></div>
@@ -262,7 +272,7 @@ export default async function Home() {
 
         <section className="why section-pad" id="why-us"><div className="why-intro"><Eyebrow>Why Asset Matrix Energy</Eyebrow><h2>Engineering support<br />with a reliability focus.</h2><p>We combine regional experience with specialized tools and methods to support critical assets from installation through operation and maintenance.</p><a className="text-link" href="#contact">Meet our team <ArrowRight size={16} /></a></div><div className="why-grid">{reasons.map(([Icon, title, text], i) => { const ReasonIcon = Icon as typeof Activity; return <article className="why-item" key={title as string}><span className="why-number">0{i + 1}</span><ReasonIcon size={25} strokeWidth={1.5} /><h3>{title as string}</h3><p>{text as string}</p></article>; })}</div></section>
 
-        <section className="final-cta" id="contact"><Image src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=2200&q=85" alt="Electricity transmission infrastructure" fill sizes="100vw" /><div className="cta-overlay" /><div className="cta-content"><Eyebrow light>Start a conversation</Eyebrow><h2>Let’s make your critical<br />assets more reliable.</h2><p>Speak with our engineering team about testing, diagnostics, reliability, instrumentation or maintenance solutions for your operation.</p><div className="hero-actions"><a className="button button-accent" href="mailto:info@assetmatrixenergy.com">Request a consultation <ArrowRight size={17} /></a><a className="button button-outline" href="mailto:info@assetmatrixenergy.com">Contact us <ArrowRight size={17} /></a></div></div><div className="cta-side-label">ASSET MATRIX ENERGY SERVICES LIMITED</div></section>
+        <section className="final-cta" id="contact"><Image src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=2200&q=85" alt="Electricity transmission infrastructure" fill sizes="100vw" /><div className="cta-overlay" /><div className="cta-content"><Eyebrow light>Start a conversation</Eyebrow><h2>Let’s make your critical<br />assets more reliable.</h2><p>Speak with our engineering team about testing, diagnostics, reliability, instrumentation or maintenance solutions for your operation.</p><div className="hero-actions"><WhatsappLink className="button button-accent" message="Hi, I would like to request a consultation about testing, diagnostics, reliability, instrumentation or maintenance solutions. I reached you via the homepage." fallbackHref="mailto:info@assetmatrixenergy.com">Request a consultation <ArrowRight size={17} /></WhatsappLink><a className="button button-outline" href="mailto:info@assetmatrixenergy.com">Contact us <ArrowRight size={17} /></a></div></div><div className="cta-side-label">ASSET MATRIX ENERGY SERVICES LIMITED</div></section>
       </main>
       <Footer />
     </>

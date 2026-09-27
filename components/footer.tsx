@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, MapPin, Phone, Mail } from "@/components/icons";
+import { ArrowUpRight, MapPin, Phone, Mail, MessageCircle } from "@/components/icons";
 import { BackToTop } from "@/components/public/back-to-top";
+import { WhatsappLink } from "@/components/public/whatsapp-link";
 import { db } from "@/lib/db";
 import { siteSettings } from "@/db/schema";
 
@@ -57,7 +58,8 @@ export async function Footer() {
           <div><MapPin size={16} /><p><strong>Head Office</strong><br />{addressHead.split(",").slice(0, 3).join(",")}</p></div>
           <div><MapPin size={16} /><p><strong>Operational Office</strong><br />{addressOps}</p></div>
           <div><Phone size={16} /><p><a href="tel:+2347069176001">{phonePrimary}</a><br /><a href="tel:+2348176153012">{phoneSecondary}</a></p></div>
-          <div><Mail size={16} /><a href={`mailto:${email}`}>{email}</a></div>
+            <div><Mail size={16} /><a href={`mailto:${email}`}>{email}</a></div>
+            <div><MessageCircle size={16} /><p><WhatsappLink message="Hi, I would like to get in touch about your engineering services. I found you via the website footer." fallbackHref={`mailto:${email}`}>Chat on WhatsApp</WhatsappLink></p></div>
         </div>
         <div className="footer-training">
           <span>Professional development</span>

@@ -42,7 +42,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return <div className="eyebrow eyebrow-light"><span />{children}</div>;
 }
 
-export function HeroSlider({ slides: provided }: { slides: HeroSlideData[] }) {
+export function HeroSlider({ slides: provided, whatsappHref }: { slides: HeroSlideData[]; whatsappHref: string }) {
   const slides = provided && provided.length ? provided : fallbackSlides;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -79,7 +79,7 @@ export function HeroSlider({ slides: provided }: { slides: HeroSlideData[] }) {
           {current.subtext && <p>{current.subtext}</p>}
           <div className="hero-actions">
             {current.cta_href && <a className="button button-accent" href={current.cta_href}>{primaryCta} <ArrowRight size={17} /></a>}
-            <a className="button button-outline" href="#contact">Talk to an engineer <ArrowRight size={17} /></a>
+            <a className="button button-outline" href={whatsappHref} target="_blank" rel="noopener noreferrer">Talk to an engineer <ArrowRight size={17} /></a>
           </div>
           <div className="hero-caption"><span className="caption-line" />Supporting the systems industry depends on</div>
         </div>

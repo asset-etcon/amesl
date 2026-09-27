@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { WhatsappLink } from "@/components/public/whatsapp-link";
 import { Gallery } from "@/components/public/gallery";
 import { ProductCard, type CardProduct } from "@/components/public/product-card";
 import { QuoteButton } from "@/components/public/quote-button";
@@ -200,7 +201,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<Pa
           <section className="pd-cta">
             <div className="eyebrow eyebrow-light">Can’t find what you need?</div>
             <h2>We represent specialist brands across reliability, testing, diagnostics and instrumentation.</h2>
-            <a className="button button-accent" href="mailto:info@assetmatrixenergy.com">Talk to our team <ArrowUpRight size={16} /></a>
+            <WhatsappLink className="button button-accent" message={`Hi, I am looking for a product we do not list and would like to talk to your team. I reached you via the ${product.name} page.`} fallbackHref="mailto:info@assetmatrixenergy.com">Talk to our team <ArrowUpRight size={16} /></WhatsappLink>
           </section>
         </div>
       </main>

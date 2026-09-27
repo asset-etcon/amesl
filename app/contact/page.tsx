@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { ArrowUpRight, MapPin, Phone, Mail } from "@/components/icons";
+import { WhatsappLink } from "@/components/public/whatsapp-link";
+import { ArrowUpRight, MapPin, Phone, Mail, MessageCircle } from "@/components/icons";
 import { db } from "@/lib/db";
 import { siteSettings } from "@/db/schema";
 
@@ -51,12 +52,14 @@ export default async function ContactPage() {
               <p className="ab-addr"><MapPin size={16} />{addressHead}</p>
               <p><Phone size={16} /><span><a href="tel:+2347069176001">{phonePrimary}</a> · <a href="tel:+2348176153012">{phoneSecondary}</a></span></p>
               <p><Mail size={16} /><a href={`mailto:${email}`}>{email}</a></p>
+              <p><MessageCircle size={16} /><WhatsappLink message="Hi, I would like to get in touch about your engineering services. I reached you via the Contact page." fallbackHref={`mailto:${email}`}>Chat on WhatsApp</WhatsappLink></p>
             </article>
             <article className="ab-office">
               <h3>Operational office</h3>
               <p className="ab-addr"><MapPin size={16} />{addressOps}</p>
               <p><Phone size={16} /><span><a href="tel:+2347069176001">{phonePrimary}</a> · <a href="tel:+2348176153012">{phoneSecondary}</a></span></p>
               <p><Mail size={16} /><a href={`mailto:${email}`}>{email}</a></p>
+              <p><MessageCircle size={16} /><WhatsappLink message="Hi, I would like to get in touch about your engineering services. I reached you via the Contact page." fallbackHref={`mailto:${email}`}>Chat on WhatsApp</WhatsappLink></p>
             </article>
           </div>
         </section>

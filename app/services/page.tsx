@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { WhatsappLink } from "@/components/public/whatsapp-link";
 import { ArrowUpRight, ArrowRight, Activity, Gauge, Zap, Waves, Thermometer, ScanLine, Move3D, Crosshair, Wrench, Settings2 } from "@/components/icons";
 
 export const metadata: Metadata = {
@@ -8,6 +9,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/services" },
   description: "Condition monitoring, predictive maintenance, electrical testing and diagnostics, vibration analysis, thermography, laser alignment, calibration and more.",
 };
+
+/** Required because the enquiry CTA reads `site_settings`; without it the number is baked at build time. */
+export const dynamic = "force-dynamic";
 
 const services = [
   { icon: Activity, name: "Condition Monitoring", body: "Understand asset health through routine measurement and analysis." },
@@ -56,7 +60,7 @@ export default function ServicesPage() {
         <section className="pd-cta">
           <div className="eyebrow eyebrow-light">Looking for a specialist service?</div>
           <h2>Tell us what you need to measure, inspect or maintain — our engineering team will advise.</h2>
-          <a className="button button-accent" href="mailto:info@assetmatrixenergy.com">Talk to our team <ArrowUpRight size={16} /></a>
+          <WhatsappLink className="button button-accent" message="Hi, I would like to talk to your team about a specialist service we need. I reached you via the Services page." fallbackHref="mailto:info@assetmatrixenergy.com">Talk to our team <ArrowUpRight size={16} /></WhatsappLink>
         </section>
       </main>
       <Footer />

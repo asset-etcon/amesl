@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { WhatsappLink } from "@/components/public/whatsapp-link";
 import { ArrowRight, ArrowUpRight, MapPin, Phone, Mail } from "@/components/icons";
 import { db } from "@/lib/db";
 import { brands as brandsTable, siteSettings } from "@/db/schema";
@@ -153,7 +154,7 @@ export default async function AboutPage() {
         <section className="pd-cta">
           <div className="eyebrow eyebrow-light">Start a conversation</div>
           <h2>Ready to talk about testing, diagnostics, reliability or instrumentation?</h2>
-          <a className="button button-accent" href={`mailto:${email}`}>Talk to our team <ArrowUpRight size={16} /></a>
+          <WhatsappLink className="button button-accent" message="Hi, I would like to talk to your team about testing, diagnostics, reliability or instrumentation. I reached you via the About page." fallbackHref={`mailto:${email}`}>Talk to our team <ArrowUpRight size={16} /></WhatsappLink>
         </section>
       </main>
       <Footer />

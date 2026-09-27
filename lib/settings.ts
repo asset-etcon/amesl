@@ -16,6 +16,7 @@ export const SETTING_KEYS = [
   "email",
   "phone_primary",
   "phone_secondary",
+  "whatsapp_number",
   "address_head_office",
   "address_operations",
   "training_url",

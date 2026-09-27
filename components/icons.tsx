@@ -33,6 +33,7 @@ export const ClipboardCheck = icon(<><rect x="5" y="4" width="14" height="17" rx
 export const MapPin = icon(<><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>);
 export const Phone = icon(<><path d="M5 3h4l2 5-2.5 1.5a15 15 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2C10 20 4 14 3 5a2 2 0 0 1 2-2Z"/></>);
 export const Mail = icon(<><rect x="3" y="5" width="18" height="14" rx="1"/><path d="m3 7 9 6 9-6"/></>);
+export const MessageCircle = icon(<><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-4-.9L3 20.5l1.5-4.6A8.4 8.4 0 0 1 12 3.5a8.4 8.4 0 0 1 9 8Z"/><path d="M8.5 10.5h7M8.5 14h4"/></>);
 export const Download = icon(<><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></>);
 export const FileText = icon(<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></>);
 export const Calculator = icon(<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h.01M12.5 11h.01M16 11h.01M9 15h.01M12.5 15h.01M16 15h.01M12.5 19h.01M16 19h.01"/></>);

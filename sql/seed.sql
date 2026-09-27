@@ -61,6 +61,7 @@ values
   ('email', 'info@assetmatrixenergy.com'),
   ('phone_primary', '+234-7069176001'),
   ('phone_secondary', '+234-8176153012'),
+  ('whatsapp_number', '2348089083495'),
   ('address_head_office', 'No. 23, House 13 Osogbo Street, Ogudu, Lagos, Nigeria.'),
   ('address_operations', '445 Herbert Macaulay Way, Bio-vaccine Compound, Yaba, Lagos, Nigeria.'),
   ('footer_about', 'Specialized engineering, industrial reliability and technical solutions for critical assets in Nigeria and Sub-Saharan Africa.'),

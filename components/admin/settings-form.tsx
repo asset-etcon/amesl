@@ -67,6 +67,9 @@ export function SettingsForm({ initial }: { initial: Values }) {
           <Field label="Secondary phone">
             <Input value={values.phone_secondary} onChange={set("phone_secondary")} />
           </Field>
+          <Field label="WhatsApp number" hint="Spaces, dashes and a leading + are fine. Enquiry buttons open a WhatsApp chat to this number; if left blank they fall back to email.">
+            <Input type="tel" placeholder="+234 808 908 3495" value={values.whatsapp_number} onChange={set("whatsapp_number")} />
+          </Field>
           <Field label="Training portal URL">
             <Input placeholder="https://…" value={values.training_url} onChange={set("training_url")} />
           </Field>
