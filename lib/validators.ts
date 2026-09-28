@@ -40,6 +40,21 @@ export const categorySchema = z.object({
 
 export type CategoryInput = z.infer<typeof categorySchema>;
 
+/**
+ * A label carries no description on the public site beyond the optional admin
+ * note, and the same status/ordering shape as a category, so the schema is
+ * deliberately identical to `categorySchema`.
+ */
+export const labelSchema = z.object({
+  name: z.string().trim().min(2, "Label name is required").max(120),
+  slug: z.string().trim().max(150).optional(),
+  description: z.string().trim().max(2000).optional(),
+  status: z.enum(["active", "inactive"]),
+  display_order: z.coerce.number().int().min(0).max(9999).default(0),
+});
+
+export type LabelInput = z.infer<typeof labelSchema>;
+
 export const quoteSchema = z.object({
   product_id: z.string().optional().nullable(),
   product_name: z.string().default(""),

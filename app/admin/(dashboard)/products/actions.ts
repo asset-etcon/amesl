@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { homepageFeaturedProducts, productDocuments, productImages, productSpecifications, products } from "@/db/schema";
+import { homepageFeaturedProducts, productDocuments, productImages, productSpecifications, products, productLabelAssignments } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { productSchema, idsSchema } from "@/lib/validators";
@@ -49,6 +49,8 @@ export interface ProductPayload {
   images: ImageInput[];
   specs: SpecInput[];
   docs: DocInput[];
+  /** Label ids in display order. Replaces the product's assignments wholesale. */
+  label_ids?: string[];
 }
 
 export type ActionResult = { ok: boolean; error?: string; id?: string };
@@ -67,6 +69,44 @@ async function uniqueSlug(value: string, currentId?: string): Promise<string> {
       .limit(1);
     if (!rows.length) return candidate;
     candidate = `${base}-${i++}`;
+  }
+}
+
+/**
+ * Replaces a product's label assignments with `labelIds`, ordered as given.
+ *
+ * Select-then-delete rather than delete-then-insert, matching syncChildren: the
+ * surviving rows keep their identity, and a label already attached stays a
+ * single row so the composite primary key is never violated. Duplicates and
+ * unknown ids are dropped, since the form submits a curated id list.
+ */
+async function syncLabels(productId: string, labelIds: string[]) {
+  const wanted = [...new Set(labelIds.filter(Boolean))];
+
+  const existing = await db
+    .select({ label_id: productLabelAssignments.label_id })
+    .from(productLabelAssignments)
+    .where(eq(productLabelAssignments.product_id, productId));
+  const existingIds = new Set(existing.map((r) => r.label_id));
+
+  const removed = existing.map((r) => r.label_id).filter((id) => !wanted.includes(id));
+  if (removed.length) {
+    await db
+      .delete(productLabelAssignments)
+      .where(and(eq(productLabelAssignments.product_id, productId), inArray(productLabelAssignments.label_id, removed)));
+  }
+
+  const inserts = wanted
+    .filter((id) => !existingIds.has(id))
+    .map((label_id, i) => ({ product_id: productId, label_id, display_order: i }));
+  if (inserts.length) await db.insert(productLabelAssignments).values(inserts);
+
+  // The form owns the order, so renumber every kept row to match its position.
+  for (const [i, id] of wanted.entries()) {
+    await db
+      .update(productLabelAssignments)
+      .set({ display_order: i })
+      .where(and(eq(productLabelAssignments.product_id, productId), eq(productLabelAssignments.label_id, id)));
   }
 }
 
@@ -208,6 +248,7 @@ export async function saveProductAction(payload: ProductPayload): Promise<Action
     }
 
     await syncChildren(productId!, payload.images ?? [], payload.specs ?? [], payload.docs ?? []);
+    await syncLabels(productId!, payload.label_ids ?? []);
 
     await logAudit(auth.user, payload.id ? "update" : "create", "product", productId, { name: input.name, status: input.status });
 
@@ -314,16 +355,25 @@ export async function duplicateProductAction(id: string): Promise<ActionResult> 
       .returning({ id: products.id });
     if (!created) throw new Error("Insert failed.");
 
-    const [images, specs, docs] = await Promise.all([
+    const [images, specs, docs, labels] = await Promise.all([
       db.select().from(productImages).where(eq(productImages.product_id, id)).orderBy(asc(productImages.display_order)),
       db.select().from(productSpecifications).where(eq(productSpecifications.product_id, id)).orderBy(asc(productSpecifications.display_order)),
       db.select().from(productDocuments).where(eq(productDocuments.product_id, id)).orderBy(asc(productDocuments.display_order)),
+      db
+        .select({ label_id: productLabelAssignments.label_id })
+        .from(productLabelAssignments)
+        .where(eq(productLabelAssignments.product_id, id))
+        .orderBy(asc(productLabelAssignments.display_order)),
     ]);
     await syncChildren(
       created.id,
       images.map((r) => ({ url: r.url })),
       specs.map((r) => ({ name: r.name, value: r.value })),
       docs.map((r) => ({ name: r.name, url: r.url }))
+    );
+    await syncLabels(
+      created.id,
+      labels.map((r) => r.label_id)
     );
 
     await logAudit(auth.user, "duplicate", "product", created.id, { from: id });

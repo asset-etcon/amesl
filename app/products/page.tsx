@@ -5,8 +5,9 @@ import { Footer } from "@/components/footer";
 import { ProductCard, type CardProduct } from "@/components/public/product-card";
 import { BrandWall } from "@/components/public/brand-wall";
 import { CatalogueSearch } from "@/components/public/catalogue-search";
+import { LabelFilter } from "@/components/public/label-filter";
 import { db } from "@/lib/db";
-import { products, brands as brandsTable, categories, productImages } from "@/db/schema";
+import { products, brands as brandsTable, categories, productImages, productLabels, productLabelAssignments } from "@/db/schema";
 import { eq, and, inArray, asc, desc, count, ilike } from "drizzle-orm";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ interface SearchParams {
   category?: string;
   sort?: string;
   page?: string;
+  label?: string;
 }
 
 const CATALOGUE_DESCRIPTION =
@@ -35,10 +37,22 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const brand = (sp.brand ?? "").trim();
   const isSearch = Boolean((sp.q ?? "").trim());
+  const label = (sp.label ?? "").trim();
 
   if (isSearch) {
     return {
       title: "Search",
+      robots: { index: false, follow: true },
+      alternates: { canonical: brand ? `/products?brand=${brand}` : "/products" },
+    };
+  }
+
+  // Label views are internal facets. Many labels can each produce a near-empty
+  // grid, so indexing them all would be a thin-page problem; they canonical to
+  // the base or brand page instead of to themselves.
+  if (label) {
+    return {
+      title: "Products",
       robots: { index: false, follow: true },
       alternates: { canonical: brand ? `/products?brand=${brand}` : "/products" },
     };
@@ -73,6 +87,18 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const q = (sp.q ?? "").trim();
   const brand = sp.brand ?? "";
   const sort = sp.sort ?? "newest";
+  const labelSlug = (sp.label ?? "").trim();
+
+  // Resolved once and guarded by status, so an unknown or inactive slug matches
+  // nothing rather than silently falling back to the whole catalogue.
+  const labelRows = labelSlug
+    ? await db
+        .select({ slug: productLabels.slug, name: productLabels.name })
+        .from(productLabels)
+        .where(and(eq(productLabels.slug, labelSlug), eq(productLabels.status, "active")))
+        .limit(1)
+    : [];
+  const activeLabel = labelRows[0] ?? null;
 
   const brandRows = await db
     .select({ slug: brandsTable.slug, name: brandsTable.name, logo_url: brandsTable.logo_url })
@@ -83,7 +109,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     // places between renders, which would make the wall look broken.
     .orderBy(asc(brandsTable.display_order), asc(brandsTable.name));
 
-  const isFiltered = Boolean(q || brand || (sp.sort && sp.sort !== "newest"));
+  // label must count as a filter too, or /products?label=x would fall through to
+  // the brand wall instead of showing the matching grid.
+  const isFiltered = Boolean(q || brand || activeLabel || (sp.sort && sp.sort !== "newest"));
 
   if (!isFiltered) {
     return (
@@ -106,6 +134,21 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const conditions = [eq(products.status, "published")];
   if (brand) conditions.push(eq(brandsTable.slug, brand));
   if (q) conditions.push(ilike(products.name, `%${q}%`));
+  if (activeLabel) {
+    // A subquery on products.id rather than a join: joining the label table
+    // would multiply rows for a product carrying several labels and break the
+    // count() below.
+    conditions.push(
+      inArray(
+        products.id,
+        db
+          .select({ product_id: productLabelAssignments.product_id })
+          .from(productLabelAssignments)
+          .innerJoin(productLabels, eq(productLabelAssignments.label_id, productLabels.id))
+          .where(eq(productLabels.slug, activeLabel.slug)),
+      ),
+    );
+  }
   const where = and(...conditions);
 
   const listQuery = db
@@ -165,11 +208,24 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (brand) params.set("brand", brand);
+    if (activeLabel) params.set("label", activeLabel.slug);
     if (sort && sort !== "newest") params.set("sort", sort);
     Object.entries(extra).forEach(([k, v]) => (v ? params.set(k, v) : null));
     const s = params.toString();
     return s ? `/products?${s}` : "/products";
   };
+
+  // Every active label with a published-product count, so the filter can show
+  // how much is behind each chip. Counted independently of the current filters
+  // on purpose: a label's size should not change as other filters are applied.
+  const facetRows = await db
+    .select({ slug: productLabels.slug, name: productLabels.name, display_order: productLabels.display_order, total: count() })
+    .from(productLabels)
+    .innerJoin(productLabelAssignments, eq(productLabelAssignments.label_id, productLabels.id))
+    .innerJoin(products, eq(products.id, productLabelAssignments.product_id))
+    .where(and(eq(productLabels.status, "active"), eq(products.status, "published")))
+    .groupBy(productLabels.id, productLabels.slug, productLabels.name, productLabels.display_order)
+    .orderBy(desc(count()), asc(productLabels.display_order), asc(productLabels.name));
 
   return (
     <>
@@ -177,9 +233,17 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       <main>
         <div className="catalogue">
           <div className="catalogue-list-head">
-            <div className="eyebrow">{activeBrand ? "Brand products" : q ? "Search results" : "Products"}</div>
+            <div className="eyebrow">
+              {activeBrand ? "Brand products" : q ? "Search results" : activeLabel ? "Label" : "Products"}
+            </div>
             <h1>
-              {activeBrand ? `${activeBrand.name} products` : q ? `Results for “${q}”` : "Products"}
+              {activeBrand
+                ? `${activeBrand.name} products`
+                : q
+                  ? `Results for “${q}”`
+                  : activeLabel
+                    ? `${activeLabel.name} products`
+                    : "Products"}
             </h1>
             {activeBrand && (
               <Link href="/products" className="cat-back">
@@ -188,7 +252,13 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
             )}
           </div>
 
-          <CatalogueSearch q={q} brand={activeBrand ? brand : undefined} />
+          <CatalogueSearch q={q} brand={activeBrand ? brand : undefined} label={activeLabel?.slug} />
+
+          <LabelFilter
+            labels={facetRows.map((r) => ({ slug: r.slug, name: r.name, total: r.total }))}
+            activeSlug={activeLabel?.slug}
+            hrefFor={(slug) => buildQuery({ label: slug, page: "" })}
+          />
 
           {rows.length ? (
             <>
@@ -222,8 +292,18 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           ) : (
             <div className="empty-cat">
               <h3>No products found</h3>
-              <p>Try adjusting your search or browse all brands.</p>
-              <Link className="button button-dark" href="/products">All brands</Link>
+              <p>
+                {activeLabel
+                  ? `No products are tagged “${activeLabel.name}” under the current filters.`
+                  : "Try adjusting your search or browse all brands."}
+              </p>
+              {activeLabel ? (
+                <Link className="button button-dark" href={buildQuery({ label: "", page: "" })}>
+                  All labels
+                </Link>
+              ) : (
+                <Link className="button button-dark" href="/products">All brands</Link>
+              )}
             </div>
           )}
         </div>

@@ -105,6 +105,35 @@ export const productDocuments = pgTable("product_documents", {
   created_at: createdAt(),
 }, (t) => [index("product_documents_product_id_idx").on(t.product_id)]);
 
+export const productLabels = pgTable("product_labels", {
+  id: id(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  /** Optional copy for the filter control and the admin list. */
+  description: text("description").notNull().default(""),
+  status: text("status").notNull().default("active"),
+  display_order: integer("display_order").notNull().default(0),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [
+  uniqueIndex("product_labels_slug_idx").on(t.slug),
+  index("product_labels_status_idx").on(t.status, t.display_order),
+]);
+
+/**
+ * Join table for many-to-many product labelling. A composite primary key makes
+ * the same label impossible to attach twice, and both sides cascade on delete so
+ * a removed product or retired-then-deleted label leaves no orphan rows.
+ */
+export const productLabelAssignments = pgTable("product_label_assignments", {
+  product_id: uuid("product_id").notNull(),
+  label_id: uuid("label_id").notNull(),
+  display_order: integer("display_order").notNull().default(0),
+}, (t) => [
+  primaryKey({ columns: [t.product_id, t.label_id] }),
+  index("product_label_assignments_label_id_idx").on(t.label_id),
+]);
+
 export const quoteRequests = pgTable("quote_requests", {
   id: id(),
   product_id: uuid("product_id"),
@@ -272,6 +301,16 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   images: many(productImages),
   specifications: many(productSpecifications),
   documents: many(productDocuments),
+  labelAssignments: many(productLabelAssignments),
+}));
+
+export const productLabelsRelations = relations(productLabels, ({ many }) => ({
+  assignments: many(productLabelAssignments),
+}));
+
+export const productLabelAssignmentsRelations = relations(productLabelAssignments, ({ one }) => ({
+  product: one(products, { fields: [productLabelAssignments.product_id], references: [products.id] }),
+  label: one(productLabels, { fields: [productLabelAssignments.label_id], references: [productLabels.id] }),
 }));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
@@ -302,6 +341,7 @@ export type ProfileRow = typeof profiles.$inferSelect;
 export type ProductRow = typeof products.$inferSelect;
 export type BrandRow = typeof brands.$inferSelect;
 export type CategoryRow = typeof categories.$inferSelect;
+export type ProductLabelRow = typeof productLabels.$inferSelect;
 export type QuoteRequestRow = typeof quoteRequests.$inferSelect;
 export type HeroSlideRow = typeof heroSlides.$inferSelect;
 export type MediaRow = typeof media.$inferSelect;

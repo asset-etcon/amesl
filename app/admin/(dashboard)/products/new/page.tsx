@@ -1,6 +1,6 @@
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { brands, categories } from "@/db/schema";
+import { brands, categories, productLabels } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/ui";
 import { ProductForm } from "@/components/admin/product-form";
@@ -10,9 +10,16 @@ export const metadata = { title: "New product | AMESL Admin" };
 export default async function NewProductPage() {
   await requireRole("products_manage");
 
-  const [brandRows, categoryRows] = await Promise.all([
+  const [brandRows, categoryRows, labelRows] = await Promise.all([
     db.select({ id: brands.id, name: brands.name }).from(brands).orderBy(asc(brands.name)),
     db.select({ id: categories.id, name: categories.name }).from(categories).orderBy(asc(categories.name)),
+    // Only active labels are assignable; a retired label keeps its existing
+    // assignments but is not offered for new ones.
+    db
+      .select({ id: productLabels.id, name: productLabels.name })
+      .from(productLabels)
+      .where(eq(productLabels.status, "active"))
+      .orderBy(asc(productLabels.display_order), asc(productLabels.name)),
   ]);
 
   return (
@@ -21,6 +28,7 @@ export default async function NewProductPage() {
       <ProductForm
         brands={brandRows.map((b) => ({ id: b.id, name: b.name }))}
         categories={categoryRows.map((c) => ({ id: c.id, name: c.name }))}
+        labels={labelRows}
       />
     </div>
   );

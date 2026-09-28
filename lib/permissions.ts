@@ -9,7 +9,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   super_admin: "Full access to every feature, user roles and site settings.",
-  product_manager: "Manage products, brands and categories. View quotes.",
+  product_manager: "Manage products, brands, categories and labels. View quotes.",
   content_manager: "Manage homepage content, services, news, media and categories.",
   sales: "View the catalogue and manage customer quote requests.",
 };
@@ -21,6 +21,7 @@ const CAPABILITIES: Record<Role, string[]> = {
     "products_manage",
     "brands",
     "categories",
+    "labels",
     "quotes",
     "quotes_manage",
     "homepage",
@@ -32,8 +33,8 @@ const CAPABILITIES: Record<Role, string[]> = {
     "users",
     "settings",
   ],
-  product_manager: ["dashboard", "products", "products_manage", "brands", "categories", "quotes", "quotes_manage", "media"],
-  content_manager: ["dashboard", "products", "categories", "homepage", "media", "news", "news_manage", "services", "services_manage"],
+  product_manager: ["dashboard", "products", "products_manage", "brands", "categories", "labels", "quotes", "quotes_manage", "media"],
+  content_manager: ["dashboard", "products", "categories", "labels", "homepage", "media", "news", "news_manage", "services", "services_manage"],
   sales: ["dashboard", "products", "quotes"],
 };
 

@@ -9,7 +9,7 @@ import { ProductCard, type CardProduct } from "@/components/public/product-card"
 import { QuoteButton } from "@/components/public/quote-button";
 import { ArrowUpRight, Download, FileText, ShieldCheck, Calculator } from "@/components/icons";
 import { db } from "@/lib/db";
-import { products, brands, categories, productImages, productSpecifications, productDocuments } from "@/db/schema";
+import { products, brands, categories, productImages, productSpecifications, productDocuments, productLabels, productLabelAssignments } from "@/db/schema";
 import { eq, and, ne, inArray, asc, desc, isNull } from "drizzle-orm";
 
 interface Params {
@@ -27,7 +27,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!product) return { title: "Product not found" };
   const brandName = product.brand?.name;
   const title = product.seo_title || (brandName ? `${product.name} — ${brandName}` : product.name);
-  const description = product.seo_description || product.short_description || `Request a quote for ${product.name} with Asset Matrix Energy.`;
+  const description =
+    product.seo_description ||
+    product.short_description ||
+    `Request a quote for ${product.name} with Asset Matrix Energy.`;
   const path = `/products/${product.brand?.slug ?? brand}/${slug}`;
 
   return {
@@ -51,7 +54,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<Pa
   if (product.brand?.slug && product.brand.slug !== brand) redirect(`/products/${product.brand.slug}/${slug}`);
   const brandSlug = product.brand?.slug ?? "";
 
-  const [images, specs, docs, related] = await Promise.all([
+  const [images, specs, docs, related, labels] = await Promise.all([
     db.select({ id: productImages.id, url: productImages.url, alt: productImages.alt }).from(productImages).where(eq(productImages.product_id, product.id)).orderBy(desc(productImages.is_primary), asc(productImages.display_order)),
     db.select({ id: productSpecifications.id, name: productSpecifications.name, value: productSpecifications.value }).from(productSpecifications).where(eq(productSpecifications.product_id, product.id)).orderBy(asc(productSpecifications.display_order)),
     db.select({ id: productDocuments.id, name: productDocuments.name, url: productDocuments.url, file_type: productDocuments.file_type }).from(productDocuments).where(eq(productDocuments.product_id, product.id)).orderBy(asc(productDocuments.display_order)),
@@ -77,6 +80,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<Pa
       )
       .orderBy(desc(products.created_at))
       .limit(4),
+    // Inactive labels are excluded so a retired label can never render a chip
+    // that leads to an empty, non-indexable grid.
+    db
+      .select({ name: productLabels.name, slug: productLabels.slug })
+      .from(productLabelAssignments)
+      .innerJoin(productLabels, eq(productLabelAssignments.label_id, productLabels.id))
+      .where(and(eq(productLabelAssignments.product_id, product.id), eq(productLabels.status, "active")))
+      .orderBy(asc(productLabelAssignments.display_order), asc(productLabels.name)),
   ]);
 
   const galleryImages = images.map((img) => ({ url: img.url, alt: img.alt }));
@@ -124,6 +135,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<Pa
 
               <div className="pd-meta">
                 {product.category?.name && <span className="pd-chip">{product.category.name}</span>}
+                {/* Each label filters the catalogue across all brands, not just this one. */}
+                {labels.map((label) => (
+                  <Link key={label.slug} href={`/products?label=${encodeURIComponent(label.slug)}`} className="pd-chip pd-chip-link">
+                    {label.name}
+                  </Link>
+                ))}
                 <span className="pd-chip">Available on request</span>
               </div>
 

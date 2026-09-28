@@ -53,6 +53,18 @@ values
   ('Industrial Equipment', 'industrial-equipment', 'General industrial and field equipment.', 'active', 7)
 on conflict (slug) do nothing;
 
+-- ---------- product_labels ----------
+insert into public.product_labels (name, slug, description, status, display_order)
+values
+  ('Vibration Monitoring', 'vibration-monitoring', 'Vibration analysers, monitoring systems and route-based data collection.', 'active', 1),
+  ('Thermography', 'thermography', 'Infrared thermographic cameras and thermal imaging for electrical and mechanical inspection.', 'active', 2),
+  ('Ultrasound', 'ultrasound', 'Airborne and contact ultrasound for steam, gas and bearing condition monitoring.', 'active', 3),
+  ('Electrical Testing', 'electrical-testing', 'Insulation resistance, power quality and electrical safety test equipment.', 'active', 4),
+  ('Portable', 'portable', 'Handheld and field-deployable instruments.', 'active', 5),
+  ('Benchtop', 'benchtop', 'Laboratory and bench-mounted instruments.', 'active', 6),
+  ('New Arrival', 'new-arrival', 'Recently added to the Asset Matrix Energy catalogue.', 'active', 7)
+on conflict (slug) do nothing;
+
 -- ---------- site settings ----------
 insert into public.site_settings (key, value)
 values

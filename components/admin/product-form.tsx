@@ -14,6 +14,7 @@ import { saveProductAction, type ProductPayload } from "@/app/admin/(dashboard)/
 import { Button, Card, EmptyState, Field, FormSection, Input, Select, Switch, Textarea, useToast } from "@/components/admin/ui";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { MediaPicker } from "@/components/admin/media-picker";
+import { LabelMultiSelect } from "@/components/admin/label-multi-select";
 
 export interface FormProduct {
   id: string;
@@ -30,6 +31,7 @@ export interface FormProduct {
   images: { id: string; url: string; alt: string; is_primary: boolean }[];
   specs: { id: string; name: string; value: string }[];
   docs: { id: string; name: string; url: string; file_type: string }[];
+  label_ids: string[];
 }
 
 interface ImageItem {
@@ -68,7 +70,17 @@ function moveItem<T>(list: T[], index: number, delta: -1 | 1): T[] {
   return next;
 }
 
-export function ProductForm({ product, brands, categories }: { product?: FormProduct; brands: { id: string; name: string }[]; categories: { id: string; name: string }[] }) {
+export function ProductForm({
+  product,
+  brands,
+  categories,
+  labels = [],
+}: {
+  product?: FormProduct;
+  brands: { id: string; name: string }[];
+  categories: { id: string; name: string }[];
+  labels?: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const { toast } = useToast();
   const isEdit = Boolean(product);
@@ -101,6 +113,10 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
   );
   const [specs, setSpecs] = useState<SpecItem[]>((product?.specs ?? []).map((s) => ({ key: uid(), id: s.id, name: s.name, value: s.value })));
   const [docs, setDocs] = useState<DocItem[]>((product?.docs ?? []).map((d) => ({ key: uid(), id: d.id, name: d.name, url: d.url, fileType: d.file_type })));
+  // Local state, not a react-hook-form field: the dropdown's order of clicks is
+  // what product_label_assignments.display_order stores, and the multi-select
+  // reports the whole selection at once.
+  const [labelIds, setLabelIds] = useState<string[]>(product?.label_ids ?? []);
   const [busy, setBusy] = useState(false);
   const [imageBusy, setImageBusy] = useState(false);
   const [docBusy, setDocBusy] = useState(false);
@@ -128,6 +144,7 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
       })),
       specs: specs.map((s, i) => ({ id: s.id, name: s.name, value: s.value, display_order: i })),
       docs: docs.map((d, i) => ({ id: d.id, name: d.name, url: d.url, file_type: d.fileType, display_order: i })),
+      label_ids: labelIds,
     };
     const result = await saveProductAction(payload);
     setBusy(false);
@@ -340,6 +357,19 @@ export function ProductForm({ product, brands, categories }: { product?: FormPro
                 <Upload size={14} /> Upload PDF
               </Button>
             </div>
+          </FormSection>
+
+          <FormSection title="Labels" description="Cross-tag this product so it appears under each label across all brands.">
+            <LabelMultiSelect
+              options={labels}
+              selected={labelIds}
+              onChange={setLabelIds}
+              emptyHint={
+                <>
+                  No active labels yet. Create them under <Link href="/admin/labels" className="font-bold text-[#9e6914] underline">Labels</Link>.
+                </>
+              }
+            />
           </FormSection>
 
           <FormSection title="Specifications" description="Structured technical details shown as a table.">

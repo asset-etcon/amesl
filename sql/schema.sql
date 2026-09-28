@@ -139,6 +139,37 @@ create table if not exists public.product_documents (
 
 create index if not exists product_documents_product_id_idx on public.product_documents (product_id);
 
+-- ---------- product_labels ----------
+create table if not exists public.product_labels (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,
+  description text not null default '',
+  status text not null default 'active' check (status in ('active', 'inactive')),
+  display_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists product_labels_status_idx on public.product_labels (status, display_order);
+
+drop trigger if exists product_labels_set_updated_at on public.product_labels;
+create trigger product_labels_set_updated_at
+  before update on public.product_labels
+  for each row execute function public.set_updated_at();
+
+-- ---------- product_label_assignments ----------
+-- Composite primary key makes a duplicate label on one product impossible, and
+-- both cascades keep orphan rows from surviving a deleted product or label.
+create table if not exists public.product_label_assignments (
+  product_id uuid not null references public.products(id) on delete cascade,
+  label_id uuid not null references public.product_labels(id) on delete cascade,
+  display_order integer not null default 0,
+  primary key (product_id, label_id)
+);
+
+create index if not exists product_label_assignments_label_id_idx on public.product_label_assignments (label_id);
+
 -- ---------- quote_requests ----------
 create table if not exists public.quote_requests (
   id uuid primary key default gen_random_uuid(),

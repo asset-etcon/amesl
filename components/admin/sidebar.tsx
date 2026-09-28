@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Package,
   Tag,
+  Tags,
   FolderOpen,
   MessageSquare,
   Home,
@@ -29,6 +30,7 @@ const NAV: NavItem[] = [
   { href: "/admin/products", permission: "products", label: "Products", icon: Package },
   { href: "/admin/brands", permission: "brands", label: "Brands", icon: Tag },
   { href: "/admin/categories", permission: "categories", label: "Categories", icon: FolderOpen },
+  { href: "/admin/labels", permission: "labels", label: "Labels", icon: Tags },
   { href: "/admin/quotes", permission: "quotes", label: "Quote requests", icon: MessageSquare },
 ];
 
