@@ -152,9 +152,6 @@ export const serviceSchema = z.object({
   // up in a map to pick a component on the public site.
   icon: z.enum(SERVICE_ICON_KEYS),
   overview: z.string().max(200_000).optional(),
-  scope: z.string().max(200_000).optional(),
-  method: z.string().max(200_000).optional(),
-  deliverables: z.string().max(200_000).optional(),
   image: z.string().trim().max(500).optional(),
   image_alt: z.string().trim().max(200).optional(),
   status: z.enum(["active", "inactive"]),

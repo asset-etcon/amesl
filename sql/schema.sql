@@ -290,9 +290,11 @@ create trigger news_posts_set_updated_at
 
 -- ---------- services ----------
 -- The public /services grid and its /services/<slug> detail pages.
--- `overview`, `scope`, `method` and `deliverables` hold rich-text HTML authored
+-- `overview` holds the entire body of a service page as rich-text HTML authored
 -- in the admin, sanitised against an allowlist in the write path (see
 -- lib/sanitize.ts) and only ever rendered through the sanitiser's output.
+-- h1-h6, p, ul/ol/li, strong, em, br and blockquote are on the allowlist, so
+-- subheadings and bulleted lists inside the overview are supported.
 --
 -- `icon` stores a key into the curated map in lib/service-icons.ts, not the name
 -- of an SVG component: it is admin-editable input, so it is validated against
@@ -308,9 +310,6 @@ create table if not exists public.services (
   summary text not null default '',
   icon text not null default 'activity',
   overview text not null default '',
-  scope text not null default '',
-  method text not null default '',
-  deliverables text not null default '',
   image text not null default '',
   image_alt text not null default '',
   status text not null default 'active' check (status in ('active', 'inactive')),
@@ -321,6 +320,30 @@ create table if not exists public.services (
   updated_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+-- The structured sections that stood beside the overview -- "What this service
+-- covers", "How we deliver it" and "What you receive" -- were folded into
+-- `overview` as headings and lists rather than deleted, so the technical copy
+-- survives. These drops retire the now-unused columns. `if exists` keeps the
+-- section idempotent and converging: a no-op on a database already created from
+-- the table above, a cleanup on one created from the earlier shape. The removed
+-- copy is recoverable from git history at commit 9bd7fa3.
+alter table public.services drop column if exists scope;
+alter table public.services drop column if exists method;
+alter table public.services drop column if exists deliverables;
+
+-- The copy those three columns held is preserved here rather than discarded, and
+-- is also recoverable from git history at commit 9bd7fa3. Nothing in the
+-- application reads or writes this table; it exists so the removal above is
+-- auditable and reversible without a restore. Safe to drop once the folded-in
+-- overviews are signed off.
+create table if not exists public.services_retired_copy (
+  slug text primary key,
+  scope text not null default '',
+  method text not null default '',
+  deliverables text not null default '',
+  archived_at timestamptz not null default now()
 );
 
 -- Serves both public reads: the ordered /services grid and the homepage band,

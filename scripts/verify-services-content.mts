@@ -32,9 +32,6 @@ const rows = await db
     slug: services.slug,
     summary: services.summary,
     overview: services.overview,
-    scope: services.scope,
-    method: services.method,
-    deliverables: services.deliverables,
     seo_title: services.seo_title,
     seo_description: services.seo_description,
   })
@@ -44,26 +41,28 @@ const rows = await db
 check("nine services present", rows.length === 9, `${rows.length} rows`);
 
 for (const row of rows) {
-  for (const field of ["overview", "scope", "method", "deliverables"] as const) {
-    const raw = row[field] ?? "";
-    const clean = sanitizeRichText(raw);
-    // Losing markup is fine; losing the words is not. Compare on text content.
-    const textOf = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&\w+;/g, " ").replace(/\s+/g, " ").trim();
-    const kept = textOf(clean);
-    const original = textOf(raw);
-    check(
-      `${row.slug} :: ${field} keeps its copy`,
-      kept.length > 40 && kept === original,
-      `${original.length} chars in, ${kept.length} kept`,
-    );
-    // `overview` is prose by design; the other three are structured lists.
-    const expectedMarkup = field === "overview" ? /<p>/ : /<(ul|ol)>[\s\S]*<li>/;
-    check(
-      `${row.slug} :: ${field} keeps its ${field === "overview" ? "paragraph" : "list"} markup`,
-      expectedMarkup.test(clean),
-      clean.slice(0, 60),
-    );
-  }
+  const raw = row.overview ?? "";
+  const clean = sanitizeRichText(raw);
+  // Losing markup is fine; losing the words is not. Compare on text content.
+  const textOf = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&\w+;/g, " ").replace(/\s+/g, " ").trim();
+  const kept = textOf(clean);
+  const original = textOf(raw);
+  check(
+    `${row.slug} :: overview keeps its copy`,
+    kept.length > 40 && kept === original,
+    `${original.length} chars in, ${kept.length} kept`,
+  );
+
+  // The overview is the whole body of the page, so it is expected to carry
+  // structure, not flat prose: subheadings for the sub-topics and a bulleted list
+  // for what the service detects or covers. A regression to plain paragraphs
+  // passes the copy check above but fails here, which is the point.
+  check(`${row.slug} :: overview keeps its subheadings`, /<h2[\s>]/i.test(clean), clean.slice(0, 70));
+  check(`${row.slug} :: overview keeps its bulleted list`, /<ul[\s>][\s\S]*<li[\s>]/i.test(clean));
+  // A service page body should be substantive. The old three-section layout
+  // carried 1,700-2,300 chars here; after folding them in the target is at least
+  // that, so a truncated or half-written overview is caught here.
+  check(`${row.slug} :: overview is substantial`, original.length >= 1500, `${original.length} chars`);
 
   check(`${row.slug} :: summary is present`, (row.summary ?? "").length > 40, `${(row.summary ?? "").length} chars`);
   check(`${row.slug} :: seo_title fits 60`, (row.seo_title ?? "").length > 0 && (row.seo_title ?? "").length <= 60, `${(row.seo_title ?? "").length}`);

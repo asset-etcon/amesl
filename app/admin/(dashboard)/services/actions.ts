@@ -41,9 +41,6 @@ export interface ServicePayload {
   summary?: string;
   icon: string;
   overview?: string;
-  scope?: string;
-  method?: string;
-  deliverables?: string;
   image?: string;
   image_alt?: string;
   status: "active" | "inactive";
@@ -70,9 +67,6 @@ export async function saveServiceAction(payload: ServicePayload) {
     // sanitised against the allowlist here, at the only point it enters the
     // database. Re-sanitised on read as defence in depth.
     const overview = sanitizeRichText(input.overview ?? "");
-    const scope = sanitizeRichText(input.scope ?? "");
-    const method = sanitizeRichText(input.method ?? "");
-    const deliverables = sanitizeRichText(input.deliverables ?? "");
 
     // Titles, summaries and SEO fields are plain text by contract; strip any
     // markup so they cannot break out of a <title> tag or a meta description.
@@ -92,9 +86,6 @@ export async function saveServiceAction(payload: ServicePayload) {
       summary,
       icon: input.icon,
       overview,
-      scope,
-      method,
-      deliverables,
       image,
       image_alt: imageAlt,
       status: input.status,

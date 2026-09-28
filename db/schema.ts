@@ -224,14 +224,13 @@ export const services = pgTable("services", {
    */
   icon: text("icon").notNull().default("activity"),
   /**
-   * `overview`, `scope`, `method` and `deliverables` are rich-text HTML
-   * authored in the admin. Sanitised against an allowlist in the server action
-   * before they are written (see lib/sanitize.ts) and re-sanitised on read.
+   * The entire body of a service page, as rich-text HTML authored in the admin.
+   * Sanitised against an allowlist in the server action before it is written (see
+   * lib/sanitize.ts) and re-sanitised on read. Headings, lists and paragraphs are
+   * all on the allowlist, so subheadings and bulleted lists inside the overview
+   * are supported.
    */
   overview: text("overview").notNull().default(""),
-  scope: text("scope").notNull().default(""),
-  method: text("method").notNull().default(""),
-  deliverables: text("deliverables").notNull().default(""),
   image: text("image").notNull().default(""),
   image_alt: text("image_alt").notNull().default(""),
   /**

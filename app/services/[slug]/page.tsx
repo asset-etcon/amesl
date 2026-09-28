@@ -26,9 +26,6 @@ type ServiceRow = {
   summary: string;
   icon: string;
   overview: string;
-  scope: string;
-  method: string;
-  deliverables: string;
   image: string;
   image_alt: string;
   status: string;
@@ -51,9 +48,6 @@ async function loadService(slug: string): Promise<ServiceRow | undefined> {
       summary: services.summary,
       icon: services.icon,
       overview: services.overview,
-      scope: services.scope,
-      method: services.method,
-      deliverables: services.deliverables,
       image: services.image,
       image_alt: services.image_alt,
       status: services.status,
@@ -130,12 +124,9 @@ export default async function ServiceDetailPage({ params }: { params: Promise<Pa
   const service = await loadService(slug);
   if (!service || !isServiceVisible({ status: service.status })) notFound();
 
-  // Defence in depth: these were sanitised on write, but re-sanitising on read means
+  // Defence in depth: this was sanitised on write, but re-sanitising on read means
   // a row inserted by a migration or a manual fix can never introduce stored XSS.
   const overview = sanitizeRichText(service.overview);
-  const scope = sanitizeRichText(service.scope);
-  const method = sanitizeRichText(service.method);
-  const deliverables = sanitizeRichText(service.deliverables);
 
   const [contact, others] = await Promise.all([
     readContact(),
@@ -176,12 +167,6 @@ export default async function ServiceDetailPage({ params }: { params: Promise<Pa
     ],
   };
 
-  const sections = [
-    { heading: "What this service covers", html: scope },
-    { heading: "How we deliver it", html: method },
-    { heading: "What you receive", html: deliverables },
-  ].filter((section) => section.html !== "");
-
   return (
     <>
       <Navbar />
@@ -206,13 +191,6 @@ export default async function ServiceDetailPage({ params }: { params: Promise<Pa
         <section className="sv-body section-pad">
           <div className="sv-main">
             {overview ? <div className="pd-rich" dangerouslySetInnerHTML={{ __html: overview }} /> : null}
-
-            {sections.map((section) => (
-              <section className="sv-block" key={section.heading}>
-                <h2>{section.heading}</h2>
-                <div className="pd-rich" dangerouslySetInnerHTML={{ __html: section.html }} />
-              </section>
-            ))}
 
             {service.image ? (
               <figure className="sv-figure">

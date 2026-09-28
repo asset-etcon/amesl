@@ -22,9 +22,6 @@ export interface ServiceFormService {
   summary: string;
   icon: string;
   overview: string;
-  scope: string;
-  method: string;
-  deliverables: string;
   image: string;
   image_alt: string;
   status: "active" | "inactive";
@@ -60,13 +57,10 @@ export function ServiceForm({ service }: { service?: ServiceFormService }) {
   const { toast } = useToast();
   const isEdit = Boolean(service);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // The three rich-text blocks are local state, not react-hook-form fields: the
-  // editors are fully controlled by `value`/`onChange`, so registering them
-  // would only duplicate the same value in two places.
+  // The overview is local state, not a react-hook-form field: the editor is fully
+  // controlled by `value`/`onChange`, so registering it would only duplicate the
+  // same value in two places.
   const [overview, setOverview] = useState(service?.overview ?? "");
-  const [scope, setScope] = useState(service?.scope ?? "");
-  const [method, setMethod] = useState(service?.method ?? "");
-  const [deliverables, setDeliverables] = useState(service?.deliverables ?? "");
   const [image, setImage] = useState(service?.image ?? "");
   const [imageBusy, setImageBusy] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -110,9 +104,6 @@ export function ServiceForm({ service }: { service?: ServiceFormService }) {
       summary: values.summary,
       icon: values.icon,
       overview,
-      scope,
-      method,
-      deliverables,
       image,
       image_alt: values.image_alt ?? "",
       status: values.status,
@@ -207,42 +198,18 @@ export function ServiceForm({ service }: { service?: ServiceFormService }) {
       <Card className="p-5">
         <FormSection
           title="Page content"
-          description="What the visitor reads on the service page. Scripts, embedded frames and unsafe links are stripped when you save."
+          description="Everything the visitor reads on the service page. Headings, paragraphs and lists are all supported. Scripts, embedded frames and unsafe links are stripped when you save."
         >
           <div className="space-y-5">
             <Field
               label="Overview"
-              hint="Opening paragraphs: what the service is and why an operator needs it."
+              hint="The whole body of the page. Open with what the service is and why an operator needs it, then use headings and lists for what it detects, where it applies and what is included."
               error={errors.overview?.message}
             >
-              <RichTextEditor value={overview} onChange={setOverview} placeholder="What this service covers…" />
-            </Field>
-
-            <Field
-              label="What we cover"
-              hint="A bulleted list of the equipment, tests or measurements included."
-              error={errors.scope?.message}
-            >
-              <RichTextEditor value={scope} onChange={setScope} placeholder="List what is included in the survey…" />
-            </Field>
-
-            <Field
-              label="How we deliver it"
-              hint="The steps of the work, in order. Use the numbered-list button for a sequence."
-              error={errors.method?.message}
-            >
-              <RichTextEditor value={method} onChange={setMethod} placeholder="How the work is carried out…" />
-            </Field>
-
-            <Field
-              label="What you receive"
-              hint="The report contents and any follow-up you can expect."
-              error={errors.deliverables?.message}
-            >
               <RichTextEditor
-                value={deliverables}
-                onChange={setDeliverables}
-                placeholder="Deliverables and reporting…"
+                value={overview}
+                onChange={setOverview}
+                placeholder="What this service is, what it detects, and where it applies…"
               />
             </Field>
           </div>
