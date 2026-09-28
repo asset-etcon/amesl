@@ -15,8 +15,10 @@ export interface LabelFilterProps {
 
 /**
  * Chip row of active labels for the catalogue grid. Counts come from the page,
- * which counts published products per label independently of the other active
- * filters, so a label does not appear to shrink as `q` or `brand` narrow things.
+ * scoped to the active brand, so a brand page never offers a label it has no
+ * products for. The search term is not part of that scope: a chip row that
+ * reshuffles while you type is worse than a chip that lands on the empty state,
+ * which names the label and offers the way back.
  */
 export function LabelFilter({ labels, activeSlug, hrefFor }: LabelFilterProps) {
   if (labels.length === 0) return null;

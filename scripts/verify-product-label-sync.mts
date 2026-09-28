@@ -19,7 +19,7 @@ for (const line of readFileSync(".env.local", "utf8").split(/\r?\n/)) {
 
 const { db, pool } = await import("../lib/db");
 const { brands, productLabels, productLabelAssignments, products } = await import("../db/schema");
-const { and, asc, eq, inArray, sql } = await import("drizzle-orm");
+const { and, asc, eq, inArray } = await import("drizzle-orm");
 const { slugify } = await import("../lib/utils");
 
 let failures = 0;
@@ -127,13 +127,16 @@ const both = await db
   .where(eq(productLabelAssignments.label_id, l1.id));
 check("one label can span many products", both.length === 2, `${both.length} product(s)`);
 
-// cleanup
-await db.delete(products).where(sql`${products.slug} like 't-sync%'`);
-await db.delete(productLabels).where(sql`${productLabels.slug} like 't-one%' or ${productLabels.slug} like 't-two%' or ${productLabels.slug} like 't-three%'`);
+// Cleanup scoped to the exact ids this run created, never a slug wildcard:
+// the catalogue holds real labels and products, and a `like 't-sync%'` delete
+// would eventually catch one of them.
+const testLabelIds = [l1, l2, l3].map((l) => l.id);
+await db.delete(products).where(inArray(products.id, [testProduct.id, other.id]));
+await db.delete(productLabels).where(inArray(productLabels.id, testLabelIds));
 const left = await db
   .select({ label_id: productLabelAssignments.label_id })
   .from(productLabelAssignments)
-  .where(inArray(productLabelAssignments.label_id, [l1.id, l2.id, l3.id]));
+  .where(inArray(productLabelAssignments.label_id, testLabelIds));
 check("cleanup removed all test rows", left.length === 0, `${left.length} left`);
 
 await pool.end();

@@ -20,6 +20,7 @@ const { db } = await import("../lib/db");
 const { brands, productLabels, productLabelAssignments, products } = await import("../db/schema");
 const { and, asc, eq, inArray, sql } = await import("drizzle-orm");
 const { slugify } = await import("../lib/utils");
+const { fetchLabelFacets } = await import("../lib/product-catalogue");
 
 let failures = 0;
 const check = (label: string, pass: boolean, detail = "") => {
@@ -154,7 +155,69 @@ const counted = await db
   );
 check("count() is not inflated by the label join", Number(counted[0]?.value ?? 0) === 1, String(counted[0]?.value));
 
-// 7. Cascade: deleting the product must remove its assignments.
+// 7. Brand scoping of the label chips — the bug where a brand page listed every
+//    label in the catalogue, including other brands' own. Asserted against the
+//    real fetchLabelFacets rather than a copy, so a refactor cannot quietly drop
+//    the brand condition. Membership is checked by membership, not by set
+//    equality: the fixture brands may also carry real labels.
+const facetLabelRows = await db
+  .insert(productLabels)
+  .values([
+    { name: `T shared ${stamp}`, slug: tSlug("T shared"), status: "active", display_order: 80 },
+    { name: `T only A ${stamp}`, slug: tSlug("T only A"), status: "active", display_order: 81 },
+    { name: `T only B ${stamp}`, slug: tSlug("T only B"), status: "active", display_order: 82 },
+  ])
+  .returning({ id: productLabels.id, slug: productLabels.slug });
+const [shared, onlyA, onlyB] = facetLabelRows;
+
+const [testBrand] = await db
+  .insert(brands)
+  .values({ name: `T brand ${stamp}`, slug: tSlug("T brand"), display_order: 999 })
+  .returning({ id: brands.id });
+
+const facetProducts = await db
+  .insert(products)
+  .values([
+    { name: `T a1 ${stamp}`, slug: `t-a1-${stamp}`, brand_id: brandRow[0].id, status: "published" },
+    { name: `T a2 ${stamp}`, slug: `t-a2-${stamp}`, brand_id: brandRow[0].id, status: "published" },
+    { name: `T a draft ${stamp}`, slug: `t-a-draft-${stamp}`, brand_id: brandRow[0].id, status: "draft" },
+    { name: `T b1 ${stamp}`, slug: `t-b1-${stamp}`, brand_id: testBrand.id, status: "published" },
+  ])
+  .returning({ id: products.id });
+const [a1, a2, aDraft, b1] = facetProducts;
+
+await db.insert(productLabelAssignments).values([
+  { product_id: a1.id, label_id: shared.id, display_order: 0 },
+  { product_id: a1.id, label_id: onlyA.id, display_order: 1 },
+  { product_id: a2.id, label_id: shared.id, display_order: 0 },
+  { product_id: aDraft.id, label_id: shared.id, display_order: 0 },
+  { product_id: b1.id, label_id: shared.id, display_order: 0 },
+  { product_id: b1.id, label_id: onlyB.id, display_order: 1 },
+]);
+
+const brandA = await db.select({ slug: brands.slug }).from(brands).where(eq(brands.id, brandRow[0].id));
+const brandASlug = brandA[0]?.slug ?? "";
+const facetsA = await fetchLabelFacets(db, brandASlug);
+const facetsB = await fetchLabelFacets(db, tSlug("T brand"));
+const facetsAll = await fetchLabelFacets(db, "");
+const facetsUnknown = await fetchLabelFacets(db, tSlug("T no such brand"));
+const totalFor = (facets: { slug: string; total: number }[], slug: string) =>
+  facets.find((f) => f.slug === slug)?.total;
+
+check("brand A facets offer A's own label", totalFor(facetsA, onlyA.slug) !== undefined);
+check("brand A facets exclude B's label", totalFor(facetsA, onlyB.slug) === undefined, facetsA.map((f) => f.slug).join(" | "));
+check("brand B facets offer B's own label", totalFor(facetsB, onlyB.slug) !== undefined);
+check("brand B facets exclude A's label", totalFor(facetsB, onlyA.slug) === undefined, facetsB.map((f) => f.slug).join(" | "));
+
+// The regression itself: a shared label counted per brand, not globally.
+check("shared label count is scoped to the brand", totalFor(facetsA, shared.slug) === 2, String(totalFor(facetsA, shared.slug)));
+check("shared label count is scoped to the other brand", totalFor(facetsB, shared.slug) === 1, String(totalFor(facetsB, shared.slug)));
+check("draft products are not counted", totalFor(facetsAll, shared.slug) === 3, String(totalFor(facetsAll, shared.slug)));
+check("brandless facets are unscoped", facetsAll.length >= 3, `${facetsAll.length} label(s)`);
+check("unknown brand yields no facets, matching its empty grid", facetsUnknown.length === 0, facetsUnknown.map((f) => f.slug).join(" | "));
+check("inactive labels never appear in facets", facetsAll.every((f) => f.slug !== testInactive.slug));
+
+// 8. Cascade: deleting the product must remove its assignments.
 await db.delete(products).where(eq(products.id, testProduct.id));
 const orphans = await db
   .select({ product_id: productLabelAssignments.product_id })
@@ -162,7 +225,7 @@ const orphans = await db
   .where(eq(productLabelAssignments.product_id, testProduct.id));
 check("deleting a product cascades its label assignments", orphans.length === 0, `${orphans.length} orphan(s)`);
 
-// 8. Cascade on the label side too.
+// 9. Cascade on the label side too.
 const [cascadeProduct] = await db
   .insert(products)
   .values({ name: `T cascade ${stamp}`, slug: `t-cascade-${stamp}`, brand_id: brandRow[0].id, status: "published" })
@@ -175,7 +238,7 @@ const labelOrphans = await db
   .where(eq(productLabelAssignments.label_id, testActive.id));
 check("deleting a label cascades its assignments", labelOrphans.length === 0, `${labelOrphans.length} orphan(s)`);
 
-// 9. Seeded rows must be untouched by the test cleanup.
+// 10. Seeded rows must be untouched by the test cleanup.
 const seeded = await db
   .select({ slug: productLabels.slug, status: productLabels.status })
   .from(productLabels)
@@ -184,13 +247,34 @@ check("seeded labels are present", seeded.length > 0, `${seeded.length} seeded`)
 const dupes = seeded.map((r) => r.slug).filter((s, i, a) => a.indexOf(s) !== i);
 check("seeded labels have no duplicate slugs", dupes.length === 0, dupes.join(" | "));
 
-// cleanup
-await db.delete(products).where(sql`${products.slug} like 't-%'`);
-await db.delete(productLabels).where(sql`${productLabels.slug} like 't-%'`);
-const leftLabels = await db.select({ id: productLabels.id }).from(productLabels).where(sql`${productLabels.slug} like 't-%'`);
-const leftAssignments = await db.select({ label_id: productLabelAssignments.label_id }).from(productLabelAssignments);
+// cleanup. Scoped to the exact ids this run created rather than a slug
+// wildcard, so a real label or product can never be caught by the cleanup, and
+// the post-check looks only at those ids — a blanket row count starts failing
+// the moment real labels are assigned through the admin.
+const testLabelIds = [testActive.id, testInactive.id, shared.id, onlyA.id, onlyB.id];
+const testProductIds = [testProduct.id, cascadeProduct.id, a1.id, a2.id, aDraft.id, b1.id];
+
+await db.delete(products).where(inArray(products.id, testProductIds));
+await db.delete(productLabels).where(inArray(productLabels.id, testLabelIds));
+await db.delete(brands).where(eq(brands.id, testBrand.id));
+
+const leftLabels = await db.select({ id: productLabels.id }).from(productLabels).where(inArray(productLabels.id, testLabelIds));
+const leftAssignments = await db
+  .select({ label_id: productLabelAssignments.label_id })
+  .from(productLabelAssignments)
+  .where(inArray(productLabelAssignments.label_id, testLabelIds));
 check("cleanup removed all test labels", leftLabels.length === 0, `${leftLabels.length} left`);
 check("no assignments remain referencing a test label", leftAssignments.length === 0, `${leftAssignments.length} left`);
+
+const leftBrand = await db.select({ id: brands.id }).from(brands).where(eq(brands.id, testBrand.id));
+check("cleanup removed the test brand", leftBrand.length === 0, `${leftBrand.length} left`);
+
+// Real assignments must survive the cleanup untouched.
+const realAssignments = await db
+  .select({ total: sql<number>`count(*)` })
+  .from(productLabelAssignments)
+  .where(sql`${productLabelAssignments.label_id} not in ${testLabelIds}`);
+check("real label assignments survive cleanup", Number(realAssignments[0]?.total ?? 0) > 0, `${realAssignments[0]?.total ?? 0} real row(s)`);
 
 // The pool holds sockets open; closing it before exit avoids a libuv assertion
 // failure on Windows teardown.

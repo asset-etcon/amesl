@@ -7,6 +7,7 @@ import { BrandWall } from "@/components/public/brand-wall";
 import { CatalogueSearch } from "@/components/public/catalogue-search";
 import { LabelFilter } from "@/components/public/label-filter";
 import { db } from "@/lib/db";
+import { buildCatalogueHref, fetchLabelFacets } from "@/lib/product-catalogue";
 import { products, brands as brandsTable, categories, productImages, productLabels, productLabelAssignments } from "@/db/schema";
 import { eq, and, inArray, asc, desc, count, ilike } from "drizzle-orm";
 import { cn } from "@/lib/utils";
@@ -204,28 +205,20 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   const activeBrand = brandRows.find((b) => b.slug === brand);
 
-  const buildQuery = (extra: Record<string, string>) => {
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (brand) params.set("brand", brand);
-    if (activeLabel) params.set("label", activeLabel.slug);
-    if (sort && sort !== "newest") params.set("sort", sort);
-    Object.entries(extra).forEach(([k, v]) => (v ? params.set(k, v) : null));
-    const s = params.toString();
-    return s ? `/products?${s}` : "/products";
-  };
+  const buildQuery = (extra: Record<string, string>) =>
+    buildCatalogueHref({ q, brand, label: activeLabel?.slug ?? "", sort }, extra);
 
-  // Every active label with a published-product count, so the filter can show
-  // how much is behind each chip. Counted independently of the current filters
-  // on purpose: a label's size should not change as other filters are applied.
-  const facetRows = await db
-    .select({ slug: productLabels.slug, name: productLabels.name, display_order: productLabels.display_order, total: count() })
-    .from(productLabels)
-    .innerJoin(productLabelAssignments, eq(productLabelAssignments.label_id, productLabels.id))
-    .innerJoin(products, eq(products.id, productLabelAssignments.product_id))
-    .where(and(eq(productLabels.status, "active"), eq(products.status, "published")))
-    .groupBy(productLabels.id, productLabels.slug, productLabels.name, productLabels.display_order)
-    .orderBy(desc(count()), asc(productLabels.display_order), asc(productLabels.name));
+  // Label chips with a published-product count, scoped to the active brand so a
+  // brand page never offers a label it has no products for.
+  const facetRows = await fetchLabelFacets(db, brand);
+
+  // A label can be active while falling outside the facets — a cross-brand link
+  // followed onto another brand's page, say. Keep it in the row so exactly one
+  // chip is ever highlighted; the 0 is honest and matches the empty grid below.
+  const facets = facetRows.slice();
+  if (activeLabel && !facets.some((f) => f.slug === activeLabel.slug)) {
+    facets.unshift({ slug: activeLabel.slug, name: activeLabel.name, total: 0 });
+  }
 
   return (
     <>
@@ -255,7 +248,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           <CatalogueSearch q={q} brand={activeBrand ? brand : undefined} label={activeLabel?.slug} />
 
           <LabelFilter
-            labels={facetRows.map((r) => ({ slug: r.slug, name: r.name, total: r.total }))}
+            labels={facets}
             activeSlug={activeLabel?.slug}
             hrefFor={(slug) => buildQuery({ label: slug, page: "" })}
           />
