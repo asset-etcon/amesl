@@ -7,12 +7,14 @@ import { Footer } from "@/components/footer";
 import { ProductCard, type CardProduct } from "@/components/public/product-card";
 import { WhatsappLink } from "@/components/public/whatsapp-link";
 import { db } from "@/lib/db";
-import { products, brands, heroSlides as heroSlidesTable, homepageFeaturedProducts, productImages, newsPosts, newsCategories, siteSettings } from "@/db/schema";
+import { products, brands, heroSlides as heroSlidesTable, homepageFeaturedProducts, productImages, newsPosts, newsCategories, siteSettings, services } from "@/db/schema";
 import { eq, inArray, asc, desc } from "drizzle-orm";
 import { newsOrder, newsPublishedAt, publishedNewsWhere } from "@/lib/news";
+import { activeServiceWhere, serviceOrder } from "@/lib/services";
+import { ServiceIcon } from "@/components/public/service-icon";
 import { whatsappHref } from "@/lib/whatsapp";
 import { formatDate } from "@/lib/utils";
-import { ArrowRight, Activity, Gauge, ScanLine, Radio, GraduationCap, Zap, Waves, Move3D, Thermometer, Crosshair, Settings2, ShieldCheck, Globe2, Wrench, ClipboardCheck } from "@/components/icons";
+import { ArrowRight, Activity, Gauge, ScanLine, Radio, GraduationCap, ShieldCheck, Globe2, Wrench, ClipboardCheck } from "@/components/icons";
 
 type LatestNews = {
   slug: string;
@@ -20,6 +22,15 @@ type LatestNews = {
   excerpt: string;
   categoryName: string | null;
   publishedAt: string;
+};
+
+/** One card in the homepage "Our expertise" band. Read from the `services` table. */
+type ServiceCard = {
+  id: string;
+  name: string;
+  slug: string;
+  summary: string;
+  icon: string;
 };
 
 // No `title` here on purpose: the root layout's `title.default` is already the
@@ -35,19 +46,6 @@ const capabilities = [
   { icon: Gauge, title: "Condition monitoring", text: "See the early signs of changing equipment health." },
   { icon: Radio, title: "Instrumentation", text: "Connect process insight with operational control." },
   { icon: GraduationCap, title: "Technical training", text: "Build the skills that support reliable operations." },
-];
-
-const services = [
-  { icon: Activity, name: "Condition Monitoring", body: "Understand asset health through routine measurement and analysis." },
-  { icon: Gauge, name: "Predictive Maintenance", body: "Use condition data to plan maintenance around equipment needs." },
-  { icon: Zap, name: "Electrical Testing & Diagnostics", body: "Assess electrical systems and equipment with specialist testing." },
-  { icon: Waves, name: "Vibration Analysis", body: "Identify rotating machinery faults and changes in operating condition." },
-  { icon: Thermometer, name: "Thermographic Inspection", body: "Locate abnormal heat patterns across electrical and mechanical assets." },
-  { icon: ScanLine, name: "Partial Discharge Analysis", body: "Evaluate insulation condition in critical high-voltage equipment." },
-  { icon: Move3D, name: "Laser Alignment", body: "Improve machine alignment for dependable rotating equipment." },
-  { icon: Crosshair, name: "Equipment Calibration", body: "Maintain confidence in measurement and control instruments." },
-  { icon: Wrench, name: "Equipment Rental", body: "Access specialist diagnostic tools for planned work and surveys." },
-  { icon: Settings2, name: "Instrumentation & Process Control", body: "Support process measurement, monitoring and control systems." },
 ];
 
 const industries = ["Oil & Gas", "Power & Energy", "Manufacturing", "Mining", "Steel", "Construction", "Marine", "Water & Wastewater", "Renewable Energy"];
@@ -104,8 +102,9 @@ export default async function Home() {
   let featuredCards: CardProduct[] = [];
   let latestNews: LatestNews[] = [];
   let whatsappNumber = "";
+  let serviceCards: ServiceCard[] = [];
   try {
-    const [slideRows, featuredRows, newsRows, settingRows] = await Promise.all([
+    const [slideRows, featuredRows, newsRows, settingRows, serviceRows] = await Promise.all([
       db
         .select({
           image_desktop: heroSlidesTable.image_desktop,
@@ -150,9 +149,24 @@ export default async function Home() {
         .orderBy(...newsOrder)
         .limit(3),
       db.select({ value: siteSettings.value }).from(siteSettings).where(eq(siteSettings.key, "whatsapp_number")),
+      // Uses the same shared visibility predicate as /services, so a deactivated
+      // service can never appear on the homepage.
+      db
+        .select({
+          id: services.id,
+          name: services.name,
+          slug: services.slug,
+          summary: services.summary,
+          icon: services.icon,
+        })
+        .from(services)
+        .where(activeServiceWhere())
+        .orderBy(...serviceOrder)
+        .limit(9),
     ]);
 
     whatsappNumber = settingRows[0]?.value ?? "";
+    serviceCards = serviceRows;
 
     heroSlides = slideRows.map((s) => ({
       headline: s.headline,
@@ -215,7 +229,7 @@ export default async function Home() {
 
         <section className="services section-pad" id="services">
           <div className="section-heading"><div><Eyebrow>Our expertise</Eyebrow><h2>Solutions designed around<br />asset performance.</h2></div><p>From precision measurement to on-site engineering, our services help teams understand equipment condition and act with clarity.</p></div>
-          <div className="service-grid">{services.map(({ icon: Icon, name, body }, index) => <a className="service-card" href="#contact" key={name}><div className="service-top"><span className="service-icon"><Icon size={21} strokeWidth={1.5} /></span><span className="service-number">{String(index + 1).padStart(2, "0")}</span></div><h3>{name}</h3><p>{body}</p><span className="service-arrow"><ArrowRight size={17} /></span></a>)}</div>
+          {serviceCards.length > 0 ? <div className="service-grid">{serviceCards.map((service, index) => <Link className="service-card" href={`/services/${service.slug}`} key={service.id}><div className="service-top"><span className="service-icon"><ServiceIcon name={service.icon} /></span><span className="service-number">{String(index + 1).padStart(2, "0")}</span></div><h3>{service.name}</h3><p>{service.summary}</p><span className="service-arrow"><ArrowRight size={17} /></span></Link>)}</div> : null}
         </section>
 
         <section className="industries" id="industries"><Image src="https://images.unsplash.com/photo-1516937941344-00b4e0337589?auto=format&fit=crop&w=2200&q=85" alt="Industrial processing facility" fill sizes="100vw" /><div className="industry-shade" /><div className="industry-content"><Eyebrow light>Industries we serve</Eyebrow><h2>Supporting critical<br />industries across Africa.</h2><p>Our experience spans complex infrastructure and the systems that keep essential operations moving.</p><div className="industry-list">{industries.map((industry, i) => <div className="industry-item" key={industry}><span>{String(i + 1).padStart(2, "0")}</span>{industry}<ArrowRight size={14} /></div>)}</div></div><div className="industry-stamp">FIELD<br />READY <span>◈</span></div></section>

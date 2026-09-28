@@ -6,7 +6,7 @@ import { actionErrorMessage, rethrowIfControlFlow } from "@/lib/action-guard";
 import { createSignedUploadUrl, objectKeyFor, publicUrlFor } from "@/lib/storage";
 import type { StorageKind } from "@/lib/storage";
 
-const kindSchema = z.enum(["productImages", "productDocuments", "media", "brandLogos", "heroImages", "newsImages"]);
+const kindSchema = z.enum(["productImages", "productDocuments", "media", "brandLogos", "heroImages", "newsImages", "servicesImages"]);
 const contentTypeSchema = z.enum(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const fileNameSchema = z.string().trim().min(1).max(160);
 

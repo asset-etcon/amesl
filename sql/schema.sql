@@ -288,6 +288,50 @@ create trigger news_posts_set_updated_at
   before update on public.news_posts
   for each row execute function public.set_updated_at();
 
+-- ---------- services ----------
+-- The public /services grid and its /services/<slug> detail pages.
+-- `overview`, `scope`, `method` and `deliverables` hold rich-text HTML authored
+-- in the admin, sanitised against an allowlist in the write path (see
+-- lib/sanitize.ts) and only ever rendered through the sanitiser's output.
+--
+-- `icon` stores a key into the curated map in lib/service-icons.ts, not the name
+-- of an SVG component: it is admin-editable input, so it is validated against
+-- SERVICE_ICON_KEYS in the server action and falls back to a default on read.
+--
+-- status is active/inactive rather than news' draft/published/archived. A
+-- service page is either offered or not, and there is nothing to schedule, so
+-- there is deliberately no publish_at column.
+create table if not exists public.services (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,
+  summary text not null default '',
+  icon text not null default 'activity',
+  overview text not null default '',
+  scope text not null default '',
+  method text not null default '',
+  deliverables text not null default '',
+  image text not null default '',
+  image_alt text not null default '',
+  status text not null default 'active' check (status in ('active', 'inactive')),
+  display_order integer not null default 0,
+  seo_title text not null default '',
+  seo_description text not null default '',
+  created_by uuid references public.profiles(id) on delete set null,
+  updated_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Serves both public reads: the ordered /services grid and the homepage band,
+-- which are the same query apart from a limit.
+create index if not exists services_status_idx on public.services (status, display_order);
+
+drop trigger if exists services_set_updated_at on public.services;
+create trigger services_set_updated_at
+  before update on public.services
+  for each row execute function public.set_updated_at();
+
 -- ---------- audit_logs ----------
 create table if not exists public.audit_logs (
   id uuid primary key default gen_random_uuid(),

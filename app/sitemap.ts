@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { brands, newsCategories, newsPosts, products } from "@/db/schema";
+import { brands, newsCategories, newsPosts, products, services } from "@/db/schema";
 import { activeNewsCategoryWhere, newsOrder, publishedNewsWhere } from "@/lib/news";
+import { activeServiceWhere, serviceOrder } from "@/lib/services";
 import { toIsoTimestamp } from "@/lib/dates";
 
 const siteUrl = (process.env.SITE_URL ?? "https://assetmatrixenergy.com").replace(/\/+$/, "");
@@ -25,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // about which scheduled posts have gone live.
   const now = new Date();
 
-  const [brandRows, productRows, postRows, newsCategoryRows] = await Promise.all([
+  const [brandRows, productRows, postRows, newsCategoryRows, serviceRows] = await Promise.all([
     db
       .select({ slug: brands.slug, updated_at: brands.updated_at })
       .from(brands)
@@ -47,6 +48,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // /news/category/<slug> URLs, and the two slugsets are unrelated. Reading
     // the wrong table lists URLs that 404, which is what an earlier revision did.
     db.select({ slug: newsCategories.slug, updated_at: newsCategories.updated_at }).from(newsCategories).where(activeNewsCategoryWhere()),
+    // Only active services: a deactivated one 404s, and listing it here would
+    // hand crawlers a URL that does not resolve.
+    db.select({ slug: services.slug, updated_at: services.updated_at }).from(services).where(activeServiceWhere()).orderBy(...serviceOrder),
   ]);
 
   const nowIso = now.toISOString();
@@ -74,6 +78,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
+    ...serviceRows.map((row) => ({
+      url: url(`/services/${row.slug}`),
+      // Through toIsoTimestamp: a raw `timestamptz` arrives as Postgres text
+      // ("2026-09-23 16:18:44.799753+00"), which Google rejects as a lastModified.
+      lastModified: toIsoTimestamp(row.updated_at, nowIso),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
     ...newsEntries,
     ...newsCategoryRows.map((row) => ({
       url: url(`/news/category/${row.slug}`),

@@ -211,6 +211,48 @@ export const newsPosts = pgTable("news_posts", {
   index("news_posts_published_idx").on(t.publish_at, t.created_at),
 ]);
 
+export const services = pgTable("services", {
+  id: id(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  /** One-line card copy on /services and the homepage band. */
+  summary: text("summary").notNull().default(""),
+  /**
+   * A key into the curated map in lib/service-icons.ts, never a name of an SVG
+   * component. The value is admin-editable, so it is validated against
+   * SERVICE_ICON_KEYS in the write path and falls back to a default on read.
+   */
+  icon: text("icon").notNull().default("activity"),
+  /**
+   * `overview`, `scope`, `method` and `deliverables` are rich-text HTML
+   * authored in the admin. Sanitised against an allowlist in the server action
+   * before they are written (see lib/sanitize.ts) and re-sanitised on read.
+   */
+  overview: text("overview").notNull().default(""),
+  scope: text("scope").notNull().default(""),
+  method: text("method").notNull().default(""),
+  deliverables: text("deliverables").notNull().default(""),
+  image: text("image").notNull().default(""),
+  image_alt: text("image_alt").notNull().default(""),
+  /**
+   * active/inactive rather than news' draft/published/archived: a service page
+   * is either offered or not. There is nothing to schedule, so there is no
+   * publish_at column.
+   */
+  status: text("status").notNull().default("active"),
+  display_order: integer("display_order").notNull().default(0),
+  seo_title: text("seo_title").notNull().default(""),
+  seo_description: text("seo_description").notNull().default(""),
+  created_by: uuid("created_by"),
+  updated_by: uuid("updated_by"),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [
+  uniqueIndex("services_slug_idx").on(t.slug),
+  // Serves both public reads: the ordered /services grid and the homepage band.
+  index("services_status_idx").on(t.status, t.display_order),
+]);
+
 export const auditLogs = pgTable("audit_logs", {
   id: id(),
   user_id: uuid("user_id"),
@@ -266,3 +308,4 @@ export type HeroSlideRow = typeof heroSlides.$inferSelect;
 export type MediaRow = typeof media.$inferSelect;
 export type NewsPostRow = typeof newsPosts.$inferSelect;
 export type NewsCategoryRow = typeof newsCategories.$inferSelect;
+export type ServiceRow = typeof services.$inferSelect;

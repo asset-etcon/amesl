@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SERVICE_ICON_KEYS } from "@/lib/service-icons";
 
 export const optionalString = z.string().default("");
 
@@ -142,6 +143,27 @@ export type NewsPostInput = z.infer<typeof newsPostSchema>;
 /** Google renders ~60 characters of a title and ~160 of a description. */
 export const SEO_TITLE_MAX = 60;
 export const SEO_DESCRIPTION_MAX = 160;
+
+export const serviceSchema = z.object({
+  name: z.string().trim().min(2, "Service name is required").max(160),
+  slug: z.string().trim().max(200).optional(),
+  summary: z.string().trim().max(300, "Keep the summary under 300 characters").optional(),
+  // A closed set, not a free string: this value is admin-editable and is looked
+  // up in a map to pick a component on the public site.
+  icon: z.enum(SERVICE_ICON_KEYS),
+  overview: z.string().max(200_000).optional(),
+  scope: z.string().max(200_000).optional(),
+  method: z.string().max(200_000).optional(),
+  deliverables: z.string().max(200_000).optional(),
+  image: z.string().trim().max(500).optional(),
+  image_alt: z.string().trim().max(200).optional(),
+  status: z.enum(["active", "inactive"]),
+  display_order: z.coerce.number().int().min(0).max(9999).default(0),
+  seo_title: z.string().trim().max(200).optional(),
+  seo_description: z.string().trim().max(400).optional(),
+});
+
+export type ServiceInput = z.infer<typeof serviceSchema>;
 
 export const roleSchema = z.enum(["super_admin", "product_manager", "content_manager", "sales"]);
 

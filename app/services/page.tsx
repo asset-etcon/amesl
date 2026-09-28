@@ -1,36 +1,64 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { db } from "@/lib/db";
+import { services } from "@/db/schema";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { WhatsappLink } from "@/components/public/whatsapp-link";
-import { ArrowUpRight, ArrowRight, Activity, Gauge, Zap, Waves, Thermometer, ScanLine, Move3D, Crosshair, Wrench, Settings2 } from "@/components/icons";
+import { ServiceIcon } from "@/components/public/service-icon";
+import { JsonLd } from "@/components/public/json-ld";
+import { activeServiceWhere, serviceOrder } from "@/lib/services";
+import { ArrowUpRight, ArrowRight } from "@/components/icons";
+
+const siteUrl = (process.env.SITE_URL ?? "https://assetmatrixenergy.com").replace(/\/+$/, "");
 
 export const metadata: Metadata = {
   title: "Services",
   alternates: { canonical: "/services" },
-  description: "Condition monitoring, predictive maintenance, electrical testing and diagnostics, vibration analysis, thermography, laser alignment, calibration and more.",
+  description: "Vibration analysis, thermographic surveys, ultrasound inspection, laser alignment, dynamic balancing, partial discharge analysis, motor analysis, calibration and equipment rental.",
 };
 
-/** Required because the enquiry CTA reads `site_settings`; without it the number is baked at build time. */
+/** Required because the page reads `services` and `site_settings`; without it both are baked at build time. */
 export const dynamic = "force-dynamic";
 
-const services = [
-  { icon: Activity, name: "Condition Monitoring", body: "Understand asset health through routine measurement and analysis." },
-  { icon: Gauge, name: "Predictive Maintenance", body: "Use condition data to plan maintenance around equipment needs." },
-  { icon: Zap, name: "Electrical Testing & Diagnostics", body: "Assess electrical systems and equipment with specialist testing." },
-  { icon: Waves, name: "Vibration Analysis", body: "Identify rotating machinery faults and changes in operating condition." },
-  { icon: Thermometer, name: "Thermographic Inspection", body: "Locate abnormal heat patterns across electrical and mechanical assets." },
-  { icon: ScanLine, name: "Partial Discharge Analysis", body: "Evaluate insulation condition in critical high-voltage equipment." },
-  { icon: Move3D, name: "Laser Alignment", body: "Improve machine alignment for dependable rotating equipment." },
-  { icon: Crosshair, name: "Equipment Calibration", body: "Maintain confidence in measurement and control instruments." },
-  { icon: Wrench, name: "Equipment Rental", body: "Access specialist diagnostic tools for planned work and surveys." },
-  { icon: Settings2, name: "Instrumentation & Process Control", body: "Support process measurement, monitoring and control systems." },
-];
+export default async function ServicesPage() {
+  // One query feeds the grid, the ItemList below and the CTA copy. `activeServiceWhere`
+  // is the single definition of "listed on the public site" — the same predicate the
+  // sitemap and the detail pages use.
+  const rows = await db
+    .select({
+      id: services.id,
+      name: services.name,
+      slug: services.slug,
+      summary: services.summary,
+      icon: services.icon,
+    })
+    .from(services)
+    .where(activeServiceWhere())
+    .orderBy(...serviceOrder);
 
-export default function ServicesPage() {
+  const listLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Asset Matrix Energy services",
+    itemListElement: rows.map((row, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "Service",
+        name: row.name,
+        description: row.summary,
+        url: `${siteUrl}/services/${row.slug}`,
+        provider: { "@type": "Organization", name: "Asset Matrix Energy" },
+      },
+    })),
+  };
+
   return (
     <>
       <Navbar />
       <main>
+        <JsonLd data={listLd} />
         <section className="ab-hero">
           <p className="eyebrow eyebrow-light">Our services</p>
           <h1>Solutions designed around <em>asset performance.</em></h1>
@@ -45,16 +73,20 @@ export default function ServicesPage() {
             </div>
             <p>Routine condition surveys, specialist diagnostics and calibration support — delivered by qualified engineers.</p>
           </div>
-          <div className="service-grid">
-            {services.map(({ icon: Icon, name, body }, index) => (
-              <a className="service-card" href="/contact" key={name}>
-                <div className="service-top"><span className="service-icon"><Icon size={21} strokeWidth={1.5} /></span><span className="service-number">{String(index + 1).padStart(2, "0")}</span></div>
-                <h3>{name}</h3>
-                <p>{body}</p>
-                <span className="service-arrow"><ArrowRight size={17} /></span>
-              </a>
-            ))}
-          </div>
+          {rows.length > 0 ? (
+            <div className="service-grid">
+              {rows.map((row, index) => (
+                <Link className="service-card" href={`/services/${row.slug}`} key={row.id}>
+                  <div className="service-top"><span className="service-icon"><ServiceIcon name={row.icon} /></span><span className="service-number">{String(index + 1).padStart(2, "0")}</span></div>
+                  <h3>{row.name}</h3>
+                  <p>{row.summary}</p>
+                  <span className="service-arrow"><ArrowRight size={17} /></span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p>Our service list is being updated. Please <Link className="text-link" href="/contact">contact our team</Link> in the meantime.</p>
+          )}
         </section>
 
         <section className="pd-cta">

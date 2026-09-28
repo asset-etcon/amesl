@@ -37,3 +37,11 @@ export const MessageCircle = icon(<><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.
 export const Download = icon(<><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></>);
 export const FileText = icon(<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></>);
 export const Calculator = icon(<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h.01M12.5 11h.01M16 11h.01M9 15h.01M12.5 15h.01M16 15h.01M12.5 19h.01M16 19h.01"/></>);
+/** Rotor and stator: a body circle with a shaft through it, for motor analysis. */
+export const Motor = icon(<><circle cx="12" cy="12" r="6"/><path d="M12 6V2M12 18v4M6 12H2M18 12h4M10.5 12h3"/></>);
+/** Concentric arcs from a point, for airborne and structure-borne ultrasound. */
+export const Ultrasound = icon(<><path d="M11 5 6 3H3v3l2 5 6 2"/><path d="M13.5 8.5a5 5 0 0 1 0 7"/><path d="M16.5 6a9 9 0 0 1 0 12"/><path d="M19.5 3.5a13 13 0 0 1 0 17"/></>);
+/** A rotor with a corrective arrow, for dynamic balancing. */
+export const Balance = icon(<><path d="M20.5 9A9 9 0 1 1 17 4.6"/><path d="M21 3v5h-5"/><path d="M12 8.5v7M9.5 13.5h5"/></>);
+/** Adjustment sliders, for instrument calibration. */
+export const Sliders = icon(<><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h10M18 18h2"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></>);
