@@ -297,6 +297,11 @@ create table if not exists public.news_posts (
   publish_at timestamptz,
   seo_title text not null default '',
   seo_description text not null default '',
+  -- Per-article opt-in for the public comment thread. Default false, so an
+  -- article that shipped before comments existed stays closed until an editor
+  -- ticks it. The public submit action re-checks this server-side; hiding the
+  -- form in the admin is not what keeps a closed article closed.
+  allow_comments boolean not null default false,
   created_by uuid references public.profiles(id) on delete set null,
   updated_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(),
@@ -318,6 +323,53 @@ drop trigger if exists news_posts_set_updated_at on public.news_posts;
 create trigger news_posts_set_updated_at
   before update on public.news_posts
   for each row execute function public.set_updated_at();
+
+-- ---------- post_comments ----------
+-- `create table if not exists` above is a no-op against a database that already
+-- has news_posts, so the column this feature depends on is added here as well.
+-- Both are idempotent: a fresh database gets the column from the create
+-- statement, an existing one from this, and running it twice changes nothing.
+-- Keeping the alter in this section rather than in news_posts means running the
+-- comments migration applies the whole feature, not half of it.
+alter table public.news_posts
+  add column if not exists allow_comments boolean not null default false;
+
+-- Public comments on a news article. There is no visitor identity in this
+-- application, so `author_name` is self-declared and `author_email` is stored for
+-- moderation only: neither is ever rendered on a public page, and the email is
+-- not published anywhere in the admin either beyond the moderation queue.
+--
+-- `submitter_hash` is the salted, truncated IP hash from lib/rate-limit.ts, used
+-- to enforce the cross-instance comment rate limit. Raw IP addresses are never
+-- stored. Unlike quote_requests, the count is a simple per-window roll: the limit
+-- applies to a visitor across every article, not per post, so one rolling count
+-- per submitter_hash is the whole check.
+--
+-- `status` defaults to 'published': a comment appears immediately, by decision.
+-- It exists so an editor can hide a borderline comment and restore it, with hard
+-- delete still available for spam. The public read path filters on
+-- status = 'published' via the shared predicate in lib/comments.ts.
+create table if not exists public.post_comments (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references public.news_posts(id) on delete cascade,
+  author_name text not null,
+  author_email text not null,
+  body text not null,
+  status text not null default 'published' check (status in ('published', 'hidden')),
+  submitter_hash text not null default '',
+  created_at timestamptz not null default now()
+);
+
+-- Serves the entire public read path: one post, published only, oldest first.
+create index if not exists post_comments_post_id_idx
+  on public.post_comments (post_id, created_at)
+  where status = 'published';
+-- Backs the cross-instance rate limit count.
+create index if not exists post_comments_submitter_hash_idx
+  on public.post_comments (submitter_hash, created_at);
+-- Admin queue ordering: newest first across all posts.
+create index if not exists post_comments_created_at_idx
+  on public.post_comments (created_at desc);
 
 -- ---------- services ----------
 -- The public /services grid and its /services/<slug> detail pages.

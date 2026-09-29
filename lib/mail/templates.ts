@@ -181,3 +181,74 @@ export function quoteConfirmationText(quote: QuoteEmailData): string {
     .filter((l) => l !== "")
     .join("\n");
 }
+
+export interface CommentEmailData {
+  id: string;
+  author_name: string;
+  author_email: string;
+  body: string;
+  created_at: string;
+}
+
+/**
+ * Internal alert for a new article comment.
+ *
+ * Comments publish immediately, so this email is the only prompt that one exists.
+ * The comment body is included in full because the alternative is opening the
+ * dashboard to read it, and the author's name is shown unlinked next to it: a
+ * self-declared name carries no authority and the layout should not imply
+ * otherwise. Every interpolation goes through `safe`, as with the quote alert.
+ */
+export function commentNotificationHtml(
+  comment: CommentEmailData,
+  post: { title: string; slug: string },
+  siteUrl: string,
+): string {
+  const rows = [
+    detailRow("Name", safe(comment.author_name)),
+    detailRow("Email", `<a href="mailto:${safe(comment.author_email)}" style="color:${GOLD_DARK};">${safe(comment.author_email)}</a>`),
+    detailRow("Article", safe(post.title)),
+    detailRow("Posted", safe(formatDateTime(comment.created_at))),
+  ].join("");
+
+  const bodyBlock = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;"><tr><td style="padding:14px;background:#fafbfa;border:1px solid ${BORDER};border-radius:8px;">
+<p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${MUTED};">Comment</p>
+<p style="margin:0;font-size:13.5px;line-height:1.65;color:${BODY};white-space:pre-wrap;">${safe(comment.body)}</p>
+</td></tr></table>`;
+
+  return layout({
+    preheader: `${comment.author_name} commented on ${post.title}`,
+    eyebrow: "New article comment",
+    heading: `${comment.author_name} left a comment`,
+    intro: "A comment was posted on a news article and is already visible to the public. Hide or delete it if it is not appropriate.",
+    content: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>${bodyBlock}`,
+    cta: {
+      label: "Moderate comments",
+      url: `${siteUrl.replace(/\/+$/, "")}/admin/comments`,
+    },
+    footnote: `Reference ${comment.id}`,
+  });
+}
+
+export function commentNotificationText(
+  comment: CommentEmailData,
+  post: { title: string; slug: string },
+  siteUrl: string,
+): string {
+  return [
+    `${comment.author_name} left a comment`,
+    "",
+    "A comment was posted on a news article and is already visible to the public. Hide or delete it if it is not appropriate.",
+    "",
+    `Name:     ${comment.author_name}`,
+    `Email:    ${comment.author_email}`,
+    `Article:  ${post.title}`,
+    `Posted:   ${formatDateTime(comment.created_at)}`,
+    `Reference: ${comment.id}`,
+    "",
+    "Comment:",
+    comment.body,
+    "",
+    `Moderate: ${siteUrl.replace(/\/+$/, "")}/admin/comments`,
+  ].join("\n");
+}

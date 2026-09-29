@@ -24,6 +24,7 @@ export interface NewsFormPost {
   category_id: string | null;
   status: NewsStatus;
   featured: boolean;
+  allow_comments: boolean;
   publish_at: string | null;
   seo_title: string;
   seo_description: string;
@@ -68,6 +69,7 @@ export function NewsForm({ post, categories }: { post?: NewsFormPost; categories
       category_id: post?.category_id ?? "",
       status: post?.status ?? "draft",
       featured: post?.featured ?? false,
+      allow_comments: post?.allow_comments ?? false,
       publish_at: toLocalInputValue(post?.publish_at ?? null),
       seo_title: post?.seo_title ?? "",
       seo_description: post?.seo_description ?? "",
@@ -289,12 +291,22 @@ export function NewsForm({ post, categories }: { post?: NewsFormPost; categories
             </Field>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 space-y-3">
             <Switch
               checked={watch("featured") ?? false}
               onChange={(v) => setValue("featured", v)}
               label="Feature this article"
             />
+            <Switch
+              checked={watch("allow_comments") ?? false}
+              onChange={(v) => setValue("allow_comments", v)}
+              label="Allow comments on this article"
+            />
+            <p className="text-[12px] leading-relaxed text-[#65727a]">
+              When this is on, visitors can post comments at the foot of the article. Comments publish immediately and are
+              not pre-approved — you can hide or delete any of them from the Comments screen. Leave it off for press
+              releases and announcements.
+            </p>
           </div>
         </FormSection>
       </Card>

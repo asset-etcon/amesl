@@ -78,6 +78,37 @@ export const QUOTE_MIN_FILL_MS = 2500;
 /** Ceiling on a form session, so a stale tab cannot bypass the timing check. */
 export const QUOTE_MAX_FILL_MS = 6 * 60 * 60 * 1000;
 
+/**
+ * A public comment on a news article.
+ *
+ * The same fill-time thresholds as the quote form: a genuine reader cannot
+ * submit in under a couple of seconds, and a tab left open overnight should not
+ * be trusted either. The name floor is 2 and the body floor is 3, so a
+ * two-character comment is rejected as empty rather than rendered.
+ */
+export const COMMENT_NAME_MAX = 80;
+export const COMMENT_BODY_MAX = 2000;
+
+export const commentSchema = z.object({
+  post_id: z.string().uuid("That article could not be found"),
+  author_name: z.string().trim().min(2, "Your name is required").max(COMMENT_NAME_MAX),
+  author_email: z.email("Enter a valid email").max(160),
+  body: z.string().trim().min(3, "Please write a little more than that").max(COMMENT_BODY_MAX),
+  /** Honeypot — hidden from people, appealing to bots. Must arrive empty. */
+  website: z.string().max(200).optional(),
+  /** Client clock when the form was shown, used to reject instant submissions. */
+  started_at: z.coerce.number().int().nonnegative().optional(),
+});
+
+export type CommentInput = z.infer<typeof commentSchema>;
+
+/** Comments a single client may post per hour, shared across server instances. */
+export const COMMENT_MAX_PER_HOUR = 5;
+/** Comments a single client may post per day. */
+export const COMMENT_MAX_PER_DAY = 15;
+/** In-process burst guard, applied before any database work. */
+export const COMMENT_MAX_PER_MINUTE = 3;
+
 export const heroSlideSchema = z.object({
   headline: z.string().trim().min(2, "Headline is required").max(160),
   subtext: z.string().trim().max(600).optional(),
@@ -148,6 +179,8 @@ export const newsPostSchema = z.object({
   // via defaultValues, and a schema-level default splits the resolver's input
   // and output types.
   featured: z.boolean(),
+  // Same rule: required rather than defaulted, so the form owns the value.
+  allow_comments: z.boolean(),
   publish_at: z.union([isoInstant, localDateString, z.literal("")]).optional(),
   seo_title: z.string().trim().max(200).optional(),
   seo_description: z.string().trim().max(400).optional(),

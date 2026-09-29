@@ -8,9 +8,12 @@ import { isNewsVisible, newsPublishedAt, publishedNewsWhere } from "@/lib/news";
 import { toIsoTimestamp } from "@/lib/dates";
 import { formatDate } from "@/lib/utils";
 import { sanitizeRichText } from "@/lib/sanitize";
+import { fetchPostComments } from "@/lib/comments";
+import { COMMENT_BODY_MAX, COMMENT_NAME_MAX } from "@/lib/validators";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { JsonLd } from "@/components/public/json-ld";
+import { CommentSection } from "@/components/public/comment-section";
 import { ArrowUpRight } from "@/components/icons";
 
 const siteUrl = (process.env.SITE_URL ?? "https://assetmatrixenergy.com").replace(/\/+$/, "");
@@ -33,6 +36,7 @@ type PostRow = {
   seo_title: string;
   seo_description: string;
   created_at: string;
+  allow_comments: boolean;
   category_name: string | null;
   category_slug: string | null;
 };
@@ -53,6 +57,7 @@ async function loadPost(slug: string): Promise<PostRow | undefined> {
       seo_title: newsPosts.seo_title,
       seo_description: newsPosts.seo_description,
       created_at: newsPosts.created_at,
+      allow_comments: newsPosts.allow_comments,
       category_name: newsCategories.name,
       category_slug: newsCategories.slug,
     })
@@ -94,8 +99,15 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   };
 }
 
-export default async function NewsPostPage({ params }: { params: Promise<Params> }) {
+export default async function NewsPostPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams: Promise<{ cpage?: string }>;
+}) {
   const { slug } = await params;
+  const sp = await searchParams;
   const post = await loadPost(slug);
   // A draft, archived or not-yet-scheduled post must 404, not render. The
   // `publishedNewsWhere()` in loadPost already filters these out, so reaching
@@ -108,6 +120,15 @@ export default async function NewsPostPage({ params }: { params: Promise<Params>
   const safeBody = sanitizeRichText(post.body);
 
   const published = newsPublishedAt({ publish_at: post.publish_at, created_at: post.created_at });
+
+  // Comments are opt-in per article, and a closed article must cost nothing. The
+  // fetch is skipped entirely rather than returning an empty thread, so it adds
+  // no round trips to the majority of pages. The page number is clamped by
+  // fetchPostComments, and `cpage` keeps it out of the way of the `/products`
+  // pagination convention this was copied from.
+  const commentPage = await (post.allow_comments
+    ? fetchPostComments(db, post.id, Number(sp.cpage) || 1)
+    : null);
 
   const related = await db
     .select({
@@ -178,6 +199,16 @@ export default async function NewsPostPage({ params }: { params: Promise<Params>
               <time dateTime={published.toISOString()}>{formatDate(published.toISOString())}</time>
               <span aria-hidden="true">·</span>
               <span>Asset Matrix Energy</span>
+              {commentPage && commentPage.total > 0 && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  {/* Links to the thread rather than repeating the count, so it is
+                      not read out twice by a screen reader. */}
+                  <a href="#cm-heading" style={{ color: "inherit" }}>
+                    {commentPage.total === 1 ? "1 comment" : `${commentPage.total} comments`}
+                  </a>
+                </>
+              )}
             </p>
 
             {post.cover_image ? (
@@ -204,6 +235,19 @@ export default async function NewsPostPage({ params }: { params: Promise<Params>
                 Back to all news <ArrowUpRight size={14} />
               </Link>
             </div>
+
+            {/* Inside the 760px column so the thread shares the article's measure
+                rather than introducing the sidebar layout news does not use.
+                Absent entirely when the article has comments closed. */}
+            {commentPage && (
+              <CommentSection
+                postId={post.id}
+                page={commentPage}
+                nameMax={COMMENT_NAME_MAX}
+                bodyMax={COMMENT_BODY_MAX}
+                hrefFor={(n) => (n === 1 ? `/news/${post.slug}` : `/news/${post.slug}?cpage=${n}`)}
+              />
+            )}
           </div>
         </article>
 

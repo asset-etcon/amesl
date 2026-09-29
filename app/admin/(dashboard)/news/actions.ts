@@ -188,6 +188,7 @@ export async function saveNewsPostAction(payload: NewsPostPayload) {
       category_id: categoryId,
       status: input.status,
       featured: input.featured ?? false,
+      allow_comments: input.allow_comments ?? false,
       publish_at: publishAt,
       seo_title: seoTitle,
       seo_description: seoDescription,
@@ -213,6 +214,7 @@ export async function saveNewsPostAction(payload: NewsPostPayload) {
       slug,
       status: input.status,
       featured: values.featured,
+      allow_comments: values.allow_comments,
       publish_at: publishAt,
     });
 

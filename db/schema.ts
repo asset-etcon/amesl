@@ -226,6 +226,12 @@ export const newsPosts = pgTable("news_posts", {
   publish_at: timestamp("publish_at", { withTimezone: true, mode: "string" }),
   seo_title: text("seo_title").notNull().default(""),
   seo_description: text("seo_description").notNull().default(""),
+  /**
+   * Per-article opt-in for the public comment thread. False by default so an
+   * article predating the feature stays closed, and re-checked server-side by
+   * the submit action rather than trusted from the rendered form.
+   */
+  allow_comments: boolean("allow_comments").notNull().default(false),
   created_by: uuid("created_by"),
   updated_by: uuid("updated_by"),
   created_at: createdAt(),
@@ -238,6 +244,36 @@ export const newsPosts = pgTable("news_posts", {
   index("news_posts_created_at_idx").on(t.created_at),
   // Mirrors the partial index in sql/schema.sql; serves the public listing.
   index("news_posts_published_idx").on(t.publish_at, t.created_at),
+]);
+
+/**
+ * Public comments on a news article. The only user-generated content on the
+ * site besides quote requests, and the only one with no identity behind it:
+ * `author_name` is self-declared and `author_email` is stored for moderation
+ * only, neither ever rendered on a public page.
+ */
+export const postComments = pgTable("post_comments", {
+  id: id(),
+  post_id: uuid("post_id").notNull(),
+  author_name: text("author_name").notNull(),
+  /** Never rendered publicly. Held so an editor can contact the author. */
+  author_email: text("author_email").notNull(),
+  /** Plain text, sanitised on write. Never rendered as HTML. */
+  body: text("body").notNull(),
+  /**
+   * 'published' on insert, because a comment appears immediately by decision.
+   * 'hidden' lets an editor take one down and put it back; hard delete stays
+   * available for spam.
+   */
+  status: text("status").notNull().default("published"),
+  /** Salted hash of the submitting client, used for cross-instance rate limiting. */
+  submitter_hash: text("submitter_hash").notNull().default(""),
+  created_at: createdAt(),
+}, (t) => [
+  // Serves the public read path: one post, published only, oldest first.
+  index("post_comments_post_id_idx").on(t.post_id, t.created_at),
+  index("post_comments_submitter_hash_idx").on(t.submitter_hash, t.created_at),
+  index("post_comments_created_at_idx").on(t.created_at),
 ]);
 
 export const services = pgTable("services", {
@@ -333,8 +369,13 @@ export const newsCategoriesRelations = relations(newsCategories, ({ many }) => (
   posts: many(newsPosts),
 }));
 
-export const newsPostsRelations = relations(newsPosts, ({ one }) => ({
+export const newsPostsRelations = relations(newsPosts, ({ one, many }) => ({
   category: one(newsCategories, { fields: [newsPosts.category_id], references: [newsCategories.id] }),
+  comments: many(postComments),
+}));
+
+export const postCommentsRelations = relations(postComments, ({ one }) => ({
+  post: one(newsPosts, { fields: [postComments.post_id], references: [newsPosts.id] }),
 }));
 
 export type ProfileRow = typeof profiles.$inferSelect;
@@ -348,3 +389,4 @@ export type MediaRow = typeof media.$inferSelect;
 export type NewsPostRow = typeof newsPosts.$inferSelect;
 export type NewsCategoryRow = typeof newsCategories.$inferSelect;
 export type ServiceRow = typeof services.$inferSelect;
+export type PostCommentRow = typeof postComments.$inferSelect;

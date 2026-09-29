@@ -42,6 +42,7 @@ export default async function EditNewsPostPage({ params }: { params: Promise<{ i
           category_id: post.category_id,
           status: post.status as NewsStatus,
           featured: post.featured,
+          allow_comments: post.allow_comments,
           publish_at: post.publish_at,
           seo_title: post.seo_title,
           seo_description: post.seo_description,

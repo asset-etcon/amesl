@@ -13,6 +13,7 @@ import {
   Images,
   Newspaper,
   FolderTree,
+  MessagesSquare,
   Wrench,
   Users,
   Settings,
@@ -39,6 +40,7 @@ const NAV_WEBSITE: NavItem[] = [
   { href: "/admin/services", permission: "services", label: "Services", icon: Wrench },
   { href: "/admin/news", permission: "news", label: "News", icon: Newspaper },
   { href: "/admin/news-categories", permission: "news", label: "News categories", icon: FolderTree },
+  { href: "/admin/comments", permission: "comments", label: "Comments", icon: MessagesSquare },
   { href: "/admin/media", permission: "media", label: "Media library", icon: Images },
 ];
 

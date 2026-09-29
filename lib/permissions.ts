@@ -28,13 +28,15 @@ const CAPABILITIES: Record<Role, string[]> = {
     "media",
     "news",
     "news_manage",
+    "comments",
+    "comments_manage",
     "services",
     "services_manage",
     "users",
     "settings",
   ],
   product_manager: ["dashboard", "products", "products_manage", "brands", "categories", "labels", "quotes", "quotes_manage", "media"],
-  content_manager: ["dashboard", "products", "categories", "labels", "homepage", "media", "news", "news_manage", "services", "services_manage"],
+  content_manager: ["dashboard", "products", "categories", "labels", "homepage", "media", "news", "news_manage", "comments", "comments_manage", "services", "services_manage"],
   sales: ["dashboard", "products", "quotes"],
 };
 

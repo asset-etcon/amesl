@@ -1,5 +1,68 @@
 import { isMailConfigured, mailConfigError, notifyRecipients, replyToAddress, sendEmail, siteUrl } from "@/lib/mail/resend";
-import { quoteConfirmationHtml, quoteConfirmationText, quoteNotificationHtml, quoteNotificationText, type QuoteEmailData } from "@/lib/mail/templates";
+import {
+  commentNotificationHtml,
+  commentNotificationText,
+  quoteConfirmationHtml,
+  quoteConfirmationText,
+  quoteNotificationHtml,
+  quoteNotificationText,
+  type CommentEmailData,
+  type QuoteEmailData,
+} from "@/lib/mail/templates";
+
+export interface CommentNotificationOutcome {
+  notified: boolean;
+  skipped: boolean;
+  errors: string[];
+}
+
+/**
+ * Alerts the internal recipients that a comment was posted on a news article.
+ *
+ * Never throws and never rejects: a comment is already visible to the public by
+ * the time this runs, so a mail failure must not be surfaced to the commenter as
+ * a failed post. There is no customer-facing confirmation — the comment is on the
+ * page in front of them already, which is the whole point of publishing
+ * immediately.
+ *
+ * Reuses `QUOTE_NOTIFY_EMAILS` rather than introducing a second recipient
+ * variable, so this ships without new required configuration. Split later if
+ * comment volume earns its own list.
+ */
+export async function notifyNewComment(
+  comment: CommentEmailData,
+  post: { title: string; slug: string },
+): Promise<CommentNotificationOutcome> {
+  if (!isMailConfigured()) {
+    console.error(`[mail] comment ${comment.id} posted but not emailed — ${mailConfigError()}`);
+    return { notified: false, skipped: true, errors: [mailConfigError()] };
+  }
+
+  const recipients = notifyRecipients();
+  if (recipients.length === 0) {
+    const error = "QUOTE_NOTIFY_EMAILS is empty or invalid";
+    console.error(`[mail] comment ${comment.id} posted but no internal recipient resolved — set QUOTE_NOTIFY_EMAILS`);
+    return { notified: false, skipped: true, errors: [error] };
+  }
+
+  const url = siteUrl();
+  const result = await sendEmail({
+    to: recipients,
+    subject: `New comment — ${post.title}`,
+    html: commentNotificationHtml(comment, post, url),
+    text: commentNotificationText(comment, post, url),
+    replyTo: replyToAddress(),
+    idempotencyKey: `comment-notify-${comment.id}`,
+  });
+
+  if (!result.ok) {
+    const error = `notification failed: ${result.error ?? "unknown error"}`;
+    console.error(`[mail] comment ${comment.id} — ${error}`);
+    return { notified: false, skipped: false, errors: [error] };
+  }
+
+  return { notified: true, skipped: false, errors: [] };
+}
 
 export interface QuoteNotificationOutcome {
   notified: boolean;
