@@ -11,6 +11,7 @@ import { ArrowUpRight, Download, FileText, ShieldCheck, Calculator } from "@/com
 import { db } from "@/lib/db";
 import { products, brands, categories, productImages, productSpecifications, productDocuments, productLabels, productLabelAssignments } from "@/db/schema";
 import { eq, and, ne, inArray, asc, desc, isNull } from "drizzle-orm";
+import { sanitizeRichText } from "@/lib/sanitize";
 
 interface Params {
   brand: string;
@@ -179,7 +180,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<Pa
             {product.description && (
               <section className="pd-section">
                 <h2>Details</h2>
-                <div className="pd-rich" dangerouslySetInnerHTML={{ __html: product.description }} />
+                {/* Defence in depth: this was sanitised on write, but
+                    re-sanitising on read means a row inserted by a migration, an
+                    import or a manual fix can never introduce stored XSS. The same
+                    pattern is used for service overviews and news bodies. */}
+                <div className="pd-rich" dangerouslySetInnerHTML={{ __html: sanitizeRichText(product.description) }} />
               </section>
             )}
 

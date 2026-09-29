@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { productSchema, idsSchema } from "@/lib/validators";
 import { slugify } from "@/lib/utils";
+import { sanitizeRichText } from "@/lib/sanitize";
 
 export interface ImageInput {
   id?: string;
@@ -206,42 +207,50 @@ export async function saveProductAction(payload: ProductPayload): Promise<Action
     const input = parsed.data;
     const slug = await uniqueSlug(input.slug?.trim() || input.name, payload.id);
 
+    // The editor runs in the browser, so this HTML is untrusted input.
+    //
+    // `description` is the one product field with an HTML sink: it is rendered
+    // through dangerouslySetInnerHTML on the public product page. Without this,
+    // any account holding `products_manage` — which includes product_manager, not
+    // just super_admin — could store script that runs for every visitor. It is
+    // sanitised at the only point it enters the database.
+    //
+    // Built once and used by both branches below, so the insert and the update
+    // cannot drift apart the way the two duplicated literals did.
+    //
+    // The other text fields are deliberately NOT run through sanitizePlainText.
+    // They reach no HTML sink — every one is rendered through React, which escapes
+    // it, or through Next's `metadata`, which escapes it — so there is nothing to
+    // sanitise. Meanwhile sanitizePlainText collapses all whitespace, and 15 of the
+    // 26 live short_descriptions contain paragraph breaks. The product form loads
+    // that field back into a textarea, so flattening it would bake the loss into
+    // the stored data on the next save, for no security benefit whatsoever.
+    const description = sanitizeRichText(input.description ?? "");
+
+    const values = {
+      name: input.name,
+      slug,
+      brand_id: input.brand_id,
+      category_id: input.category_id || null,
+      short_description: input.short_description ?? "",
+      description,
+      status: input.status,
+      featured: input.featured,
+      seo_title: input.seo_title ?? "",
+      seo_description: input.seo_description ?? "",
+    };
+
     let productId = payload.id;
 
     if (payload.id) {
       await db
         .update(products)
-        .set({
-          name: input.name,
-          slug,
-          brand_id: input.brand_id,
-          category_id: input.category_id || null,
-          short_description: input.short_description ?? "",
-          description: input.description ?? "",
-          status: input.status,
-          featured: input.featured ?? false,
-          seo_title: input.seo_title ?? "",
-          seo_description: input.seo_description ?? "",
-          updated_by: auth.user.id,
-        })
+        .set({ ...values, updated_by: auth.user.id })
         .where(eq(products.id, payload.id));
     } else {
       const [created] = await db
         .insert(products)
-        .values({
-          name: input.name,
-          slug,
-          brand_id: input.brand_id,
-          category_id: input.category_id || null,
-          short_description: input.short_description ?? "",
-          description: input.description ?? "",
-          status: input.status,
-          featured: input.featured ?? false,
-          seo_title: input.seo_title ?? "",
-          seo_description: input.seo_description ?? "",
-          created_by: auth.user.id,
-          updated_by: auth.user.id,
-        })
+        .values({ ...values, created_by: auth.user.id, updated_by: auth.user.id })
         .returning({ id: products.id });
       if (!created) throw new Error("Insert failed.");
       productId = created.id;
