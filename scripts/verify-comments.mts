@@ -25,7 +25,7 @@ const { db, pool } = await import("../lib/db");
 const { newsPosts, postComments } = await import("../db/schema");
 const { and, eq, inArray, sql } = await import("drizzle-orm");
 const { fetchPostComments, publishedCommentsWhere, commentPageWindow } = await import("../lib/comments");
-const { COMMENT_BODY_MAX, commentSchema } = await import("../lib/validators");
+const { COMMENT_BODY_MAX, commentSchema, newsPostSchema } = await import("../lib/validators");
 const { sanitizePlainText } = await import("../lib/sanitize");
 
 let failures = 0;
@@ -183,6 +183,31 @@ const predicateCount = await db
   .from(postComments)
   .where(and(eq(postComments.post_id, openPost.id), publishedCommentsWhere()));
 check("the shared predicate selects the same rows as the fetch", predicateCount.length === 2, `${predicateCount.length} row(s)`);
+
+// 11. The admin save contract. `allow_comments` must stay REQUIRED on
+//     newsPostSchema, because the news form's payload is validated by the
+//     schema and an omitted required field fails every save of every article.
+//     The form-side half of this is a compile-time guarantee: NewsPostPayload is
+//     derived from the schema, so a missing field fails `tsc --noEmit`. This
+//     check covers the schema half, which types cannot see — someone making the
+//     field optional would typecheck cleanly and reintroduce the production
+//     outage, so assert the requirement explicitly.
+const baseNewsPayload = {
+  title: "Verify comments toggle",
+  status: "published" as const,
+  featured: false,
+  allow_comments: true,
+};
+check("a news payload with allow_comments validates", newsPostSchema.safeParse(baseNewsPayload).success);
+check(
+  "a news payload missing allow_comments is rejected",
+  !newsPostSchema.safeParse({ ...baseNewsPayload, allow_comments: undefined }).success,
+);
+check(
+  "a news payload missing featured is rejected",
+  !newsPostSchema.safeParse({ ...baseNewsPayload, featured: undefined }).success,
+);
+check("an unknown status is rejected", !newsPostSchema.safeParse({ ...baseNewsPayload, status: "pending" }).success);
 
 // cleanup, scoped to this run's ids only.
 await db.delete(postComments).where(inArray(postComments.id, testCommentIds));

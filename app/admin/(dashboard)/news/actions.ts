@@ -7,7 +7,7 @@ import { newsCategories, newsPosts } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
 import { actionErrorMessage, rethrowIfControlFlow } from "@/lib/action-guard";
 import { logAudit } from "@/lib/audit";
-import { idsSchema, newsCategorySchema, newsPostSchema } from "@/lib/validators";
+import { idsSchema, newsCategorySchema, newsPostSchema, type NewsPostInput } from "@/lib/validators";
 import { sanitizePlainText, sanitizeRichText } from "@/lib/sanitize";
 import { normaliseCoverImageUrl } from "@/lib/news";
 import { slugify } from "@/lib/utils";
@@ -120,21 +120,21 @@ export async function setNewsCategoryStatusAction(ids: string[], status: "active
   }
 }
 
-export interface NewsPostPayload {
-  id?: string;
-  title: string;
-  slug?: string;
-  excerpt?: string;
-  body?: string;
-  cover_image?: string;
-  cover_image_alt?: string;
-  category_id?: string | null;
-  status: "draft" | "published" | "archived";
-  featured?: boolean;
-  publish_at?: string;
-  seo_title?: string;
-  seo_description?: string;
-}
+/**
+ * The action's parameter is derived from the schema rather than restated here.
+ *
+ * A hand-written duplicate of `newsPostSchema` is what let a required field
+ * reach the form but not the action's payload: the form omitted it, the
+ * interface never declared it, so `tsc` had nothing to flag and every save of
+ * every article failed at runtime with "expected boolean, received undefined".
+ * Deriving the type means a field the schema requires is a field every call site
+ * must supply, and adding one to the schema now breaks the build at the call
+ * site instead of in production.
+ *
+ * `id` is the one field the schema does not carry: it addresses an existing row
+ * and is deliberately not part of the validated body.
+ */
+export type NewsPostPayload = NewsPostInput & { id?: string };
 
 export async function saveNewsPostAction(payload: NewsPostPayload) {
   const auth = await requireRole("news_manage");
@@ -187,8 +187,12 @@ export async function saveNewsPostAction(payload: NewsPostPayload) {
       cover_image_alt: coverImageAlt,
       category_id: categoryId,
       status: input.status,
-      featured: input.featured ?? false,
-      allow_comments: input.allow_comments ?? false,
+      // No `?? false` here: newsPostSchema requires both, so a value that
+      // reached this line is already a boolean. The fallback this replaces read
+      // as though the field were optional, which is the misreading that hid the
+      // bug it was meant to guard against.
+      featured: input.featured,
+      allow_comments: input.allow_comments,
       publish_at: publishAt,
       seo_title: seoTitle,
       seo_description: seoDescription,

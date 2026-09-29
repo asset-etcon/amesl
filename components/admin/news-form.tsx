@@ -105,6 +105,11 @@ export function NewsForm({ post, categories }: { post?: NewsFormPost; categories
       category_id: values.category_id || null,
       status: values.status,
       featured: values.featured ?? false,
+      // Required by newsPostSchema. The form state, the defaults and the Switch
+      // all carry it, but it has to appear in this literal too: the action
+      // validates the payload, not the form, and a field that never reaches the
+      // payload fails every save rather than just this one.
+      allow_comments: values.allow_comments ?? false,
       publish_at: publishAtIso,
       seo_title: values.seo_title,
       seo_description: values.seo_description,
