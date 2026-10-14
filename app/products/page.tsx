@@ -64,7 +64,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   }
 
   const brandRow = await db
-    .select({ name: brandsTable.name, description: brandsTable.description })
+    .select({ id: brandsTable.id, name: brandsTable.name, description: brandsTable.description })
     .from(brandsTable)
     .where(and(eq(brandsTable.slug, brand), eq(brandsTable.status, "active")))
     .limit(1);
@@ -72,6 +72,25 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   // An unknown or inactive brand slug must not be indexable as a thin page.
   if (!brandRow[0]) {
     return { title: "Product Catalogue", robots: { index: false, follow: true }, alternates: { canonical: "/products" } };
+  }
+
+  // A brand whose every product is still a draft renders the "No products found"
+  // empty state: a title, a breadcrumb and a brand wall, with nothing to index.
+  // Self-canonicalising that page invites Google to index an empty result set, and
+  // a sitemap full of them reads as crawl waste. It stays reachable (follow: true)
+  // so the links out of it still pass, but it is kept out of the index and
+  // canonicalises to the catalogue.
+  const [productCount] = await db
+    .select({ value: count(products.id) })
+    .from(products)
+    .where(and(eq(products.status, "published"), eq(products.brand_id, brandRow[0].id)));
+
+  if (!productCount?.value) {
+    return {
+      title: `${brandRow[0].name} Products`,
+      robots: { index: false, follow: true },
+      alternates: { canonical: "/products" },
+    };
   }
 
   return {

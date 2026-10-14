@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { brands, newsCategories, newsPosts, products, services } from "@/db/schema";
 import { activeNewsCategoryWhere, newsOrder, publishedNewsWhere } from "@/lib/news";
@@ -14,8 +14,11 @@ const siteUrl = (process.env.SITE_URL ?? "https://assetmatrixenergy.com").replac
  * regenerated at most once per hour. A news post that publishes mid-interval is
  * picked up by the sitemap's own revalidation after the action's
  * `revalidatePath("/sitemap.xml")`, which fires the moment an editor publishes.
+ *
+ * Fifteen minutes, not an hour: an editor publishing or archiving a product needs
+ * it to reach Google promptly. At 77 URLs this is still a trivial amount of work.
  */
-export const revalidate = 3600;
+export const revalidate = 900;
 
 type Entry = MetadataRoute.Sitemap[number];
 
@@ -27,13 +30,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const [brandRows, productRows, postRows, newsCategoryRows, serviceRows] = await Promise.all([
+    // The published-product count rides along with the brand so the `?brand=`
+    // entries below can be limited to brands that actually have a grid to show.
+    // `count()` returns bigint in Postgres, hence the String() coercion.
     db
-      .select({ slug: brands.slug, updated_at: brands.updated_at })
+      .select({
+        slug: brands.slug,
+        updated_at: brands.updated_at,
+        published_count: sql<string>`count(${products.id})::text`,
+      })
       .from(brands)
-      .where(eq(brands.status, "active")),
+      .leftJoin(products, and(eq(products.brand_id, brands.id), eq(products.status, "published")))
+      .where(eq(brands.status, "active"))
+      .groupBy(brands.id, brands.slug, brands.updated_at),
     // Product URLs are keyed by brand as well as slug, so the brand is needed
     // here; products whose brand is missing or inactive are omitted rather than
-    // emitting a URL that redirects.
+    // emitting a URL that redirects. No limit or offset: every published product
+    // must appear, and an earlier revision silently truncated this to the first
+    // page, which is why 58 live products were missing from the sitemap.
     db
       .select({ slug: products.slug, updated_at: products.updated_at, brand_slug: brands.slug })
       .from(products)
@@ -93,12 +107,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.5,
     })),
-    ...brandRows.map((row) => ({
-      url: url(`/products?brand=${row.slug}`),
-      lastModified: toIsoTimestamp(row.updated_at, nowIso),
-      changeFrequency: "weekly" as const,
-      priority: 0.6,
-    })),
+    ...brandRows
+      // A brand with no published products renders the "No products found" empty
+      // state. Listing those URLs asks Google to index a page with no content, and
+      // 26 of the 29 brands were in that state - a third of the sitemap was
+      // empty pages, which reads as crawl waste and drags down the whole domain.
+      // They are `noindex` in generateMetadata, so they must not be listed here.
+      .filter((row) => Number(row.published_count) > 0)
+      .map((row) => ({
+        url: url(`/products?brand=${row.slug}`),
+        lastModified: toIsoTimestamp(row.updated_at, nowIso),
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      })),
     ...productRows.map((row) => ({
       url: url(`/products/${row.brand_slug}/${row.slug}`),
       lastModified: toIsoTimestamp(row.updated_at, nowIso),

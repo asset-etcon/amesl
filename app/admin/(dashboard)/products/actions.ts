@@ -267,6 +267,11 @@ export async function saveProductAction(payload: ProductPayload): Promise<Action
       revalidatePath("/", "layout");
       revalidatePath("/products", "layout");
     }
+    // The sitemap lists every published product and every brand that has one, so
+    // a save that publishes, unpublishes, renames or removes a product all change
+    // it. Without this the sitemap keeps serving the render from before the edit
+    // and Google never learns about the page.
+    revalidatePath("/sitemap.xml");
 
     return { ok: true, id: productId };
   } catch (err) {
@@ -284,6 +289,7 @@ export async function deleteProductsAction(ids: string[]): Promise<ActionResult>
     revalidatePath("/admin/products");
     revalidatePath("/", "layout");
     revalidatePath("/products", "layout");
+    revalidatePath("/sitemap.xml");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Delete failed." };
@@ -301,6 +307,9 @@ export async function setProductStatusAction(ids: string[], status: "draft" | "p
     revalidatePath("/admin");
     revalidatePath("/", "layout");
     revalidatePath("/products", "layout");
+    // Publishing the first product for a brand also creates that brand's
+    // /products?brand= landing page in the sitemap, so this cannot be skipped.
+    revalidatePath("/sitemap.xml");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Update failed." };
