@@ -24,6 +24,5 @@ export default function robots(): MetadataRoute.Robots {
     // Both files: sitemap.xml for the whole catalogue, news-sitemap.xml for the
     // articles. robots.txt `sitemap:` accepts more than one entry.
     sitemap: [`${siteUrl}/sitemap.xml`, `${siteUrl}/news-sitemap.xml`],
-    host: siteUrl,
   };
 }
