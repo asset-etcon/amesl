@@ -17,7 +17,7 @@ values
   ('CS Instrument', 'cs-instrument', '/pics/brands/cs instrument.webp', '', 'active', 5),
   ('DB VB', 'db-vb', '/pics/brands/db vb.webp', '', 'active', 6),
   ('Dinnteco', 'dinnteco', '/pics/brands/dinnteco.webp', '', 'active', 7),
-  ('Doble', 'doble', '/pics/brands/doble.webp', '', 'active', 8),
+  ('Doble', 'doble', '/pics/brands/doble.png', '', 'active', 8),
   ('Eagle Eye', 'eagle-eye', '/pics/brands/eagle-eye.webp', '', 'active', 9),
   ('Easy-Laser', 'easy-laser', '/pics/brands/easy-laser.webp', '', 'active', 10),
   ('Erbessd Systems', 'erbessd-systems', '/pics/brands/erbessd systems.webp', '', 'active', 11),
