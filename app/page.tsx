@@ -20,6 +20,8 @@ type LatestNews = {
   slug: string;
   title: string;
   excerpt: string;
+  coverImage: string;
+  coverImageAlt: string;
   categoryName: string | null;
   publishedAt: string;
 };
@@ -139,6 +141,8 @@ export default async function Home() {
           slug: newsPosts.slug,
           title: newsPosts.title,
           excerpt: newsPosts.excerpt,
+          cover_image: newsPosts.cover_image,
+          cover_image_alt: newsPosts.cover_image_alt,
           publish_at: newsPosts.publish_at,
           created_at: newsPosts.created_at,
           category_name: newsCategories.name,
@@ -201,6 +205,8 @@ export default async function Home() {
       slug: row.slug,
       title: row.title,
       excerpt: row.excerpt,
+      coverImage: row.cover_image,
+      coverImageAlt: row.cover_image_alt,
       categoryName: row.category_name,
       publishedAt: newsPublishedAt({ publish_at: row.publish_at, created_at: row.created_at }).toISOString(),
     }));
@@ -266,6 +272,11 @@ export default async function Home() {
             <div className="nw-list">
               {latestNews.map((item) => (
                 <article className="nw-card" key={item.slug}>
+                  {item.coverImage ? (
+                    <div className="nw-cover">
+                      <img src={item.coverImage} alt={item.coverImageAlt || item.title} loading="lazy" decoding="async" />
+                    </div>
+                  ) : null}
                   <span className="nw-chip">{item.categoryName ?? "Update"}</span>
                   <h3><Link href={`/news/${item.slug}`}>{item.title}</Link></h3>
                   {item.excerpt ? <p>{item.excerpt.slice(0, 150)}</p> : null}
