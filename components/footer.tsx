@@ -65,6 +65,7 @@ export async function Footer() {
           <span>Professional development</span>
           <h3>Make reliability<br />part of your practice.</h3>
           <a href={trainingUrl} target="_blank" rel="noopener noreferrer">Visit training portal <ArrowUpRight size={14} /></a>
+          <Image className="footer-vcgl-logo" src="/vcgl%20wheel%20logo.png" alt="VCGL wheel logo" width={160} height={160} />
         </div>
       </div>
       <div className="footer-bottom">
